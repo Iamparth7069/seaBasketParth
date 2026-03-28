@@ -1,0 +1,85 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:seabasket/src/base/dependencyinjection/locator.dart';
+import 'package:seabasket/src/base/extensions/scaffold_extension.dart';
+import 'package:seabasket/src/base/utils/constants/color_constant.dart';
+import 'package:seabasket/src/base/utils/constants/navigation_route_constants.dart';
+import 'package:seabasket/src/base/utils/navigation_utils.dart';
+import 'package:seabasket/src/providers/bottom_nav_provider.dart';
+import 'package:seabasket/src/providers/user_provider.dart';
+import 'package:seabasket/src/ui//home/home_screen.dart';
+import 'package:seabasket/src/ui//home/saved_screen.dart';
+import 'package:seabasket/src/ui//home/search_screen.dart';
+import 'package:seabasket/src/ui/account_screen.dart';
+import 'package:seabasket/src/ui/cart_screen.dart';
+
+class BaseScreen extends StatelessWidget {
+  const BaseScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final screens = [
+      const HomeScreen(),
+      const SearchScreen(),
+      const CartScreen(),
+      const AccountScreen(),
+    ];
+
+    final titles = ["Discover", "Search", "Cart", "Account"];
+
+    return Consumer<BottomNavProvider>(
+      builder: (context, provider, _) {
+        final index = provider.selectedIndex;
+        return screens[index].commonScaffold(
+          context: context,
+          title: titles[index],
+          centerTitle: index != 0 ? true : false,
+          leading: (provider.selectedIndex == 1 && provider.fromHomeSearch)
+              ? IconButton(
+                  onPressed: () {
+                    provider.changeTab(0);
+                  },
+                  icon: const Icon(Icons.arrow_back),
+                )
+              : null,
+          actions: index != 4
+              ? [
+                  Consumer<UserProvider>(
+                    builder: (context, userProvider, child) {
+                      if (!userProvider.isLoggedIn) {
+                        return IconButton(
+                          onPressed: () {
+                            locator<NavigationUtils>().push(routeLogin);
+                          },
+                          icon: const Icon(Icons.login),
+                        );
+                      }
+                      return const SizedBox();
+                    },
+                  )
+                ]
+              : null,
+          bottomNavigationBar: BottomNavigationBar(
+            currentIndex: provider.selectedIndex,
+            onTap: (index) {
+              provider.changeTab(index, fromHomeSearch: false);
+            },
+            type: BottomNavigationBarType.fixed,
+            selectedItemColor: primaryColor,
+            unselectedItemColor: Colors.grey,
+            items: const [
+              BottomNavigationBarItem(
+                  icon: Icon(Icons.home_outlined), label: "Home"),
+              BottomNavigationBarItem(
+                  icon: Icon(Icons.search), label: "Search"),
+              BottomNavigationBarItem(
+                  icon: Icon(Icons.shopping_cart_outlined), label: "Cart"),
+              BottomNavigationBarItem(
+                  icon: Icon(Icons.person_outline), label: "Account"),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
