@@ -4,22 +4,22 @@ import 'package:seabasket/src/base/dependencyinjection/locator.dart';
 import 'package:seabasket/src/base/extensions/scaffold_extension.dart';
 import 'package:seabasket/src/base/utils/constants/color_constant.dart';
 import 'package:seabasket/src/base/utils/constants/fontsize_constant.dart';
-import 'package:seabasket/src/base/utils/constants/image_constant.dart';
 import 'package:seabasket/src/base/utils/dialog_utils.dart';
 import 'package:seabasket/src/base/utils/image_utils.dart';
 import 'package:seabasket/src/base/utils/localization/localization.dart';
 import 'package:seabasket/src/base/utils/navigation_utils.dart';
+import 'package:seabasket/src/base/utils/constants/dic_params.dart';
 import 'package:seabasket/src/base/utils/constants/navigation_route_constants.dart';
+import 'package:seabasket/src/base/utils/progress_dialog_utils.dart';
 import 'package:seabasket/src/controllers/cart_controller.dart';
 import 'package:seabasket/src/controllers/product_controller.dart';
 import 'package:seabasket/src/models/cart/cart_model.dart';
-import 'package:seabasket/src/models/cart_item.dart';
-import 'package:seabasket/src/models/product.dart';
 import 'package:seabasket/src/models/product/product_model.dart';
 import 'package:seabasket/src/models/request/req_cart_model.dart';
 import 'package:seabasket/src/models/response/res_product_detail_model.dart';
 import 'package:seabasket/src/providers/bottom_nav_provider.dart';
 import 'package:seabasket/src/providers/cart_provider.dart';
+import 'package:seabasket/src/providers/checkout_provider.dart';
 import 'package:seabasket/src/providers/product_provider.dart';
 import 'package:seabasket/src/providers/user_provider.dart';
 import 'package:seabasket/src/widgets/primary_button.dart';
@@ -114,10 +114,14 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
+        color: const Color(0xFFF5F5F5),
         borderRadius: BorderRadius.circular(20),
       ),
+      clipBehavior: Clip.antiAlias,
       child: ImageUtils().getBase64Image(
         product.imageUrl,
+        fit: BoxFit.fitWidth,
+        fillHeight: false,
       ),
     );
   }
@@ -213,12 +217,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             children: [
               Expanded(
                 child: OutlinedButton(
-                  onPressed: () {
+                  onPressed: () async {
                     if (!userProvider.isLoggedIn) {
                       _showLoginDialog();
                       return;
                     }
-                    locator<NavigationUtils>().push(routeCheckout);
+                    await _handleBuyNow(product, selectedSize);
                   },
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
@@ -247,7 +251,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   backgroundColor: primaryButtonColor,
                   textColor: secondaryColor,
                   leadingIcon: Icons.shopping_bag_outlined,
-                  isLoading: _isAddingToCart,
                   onButtonClick: _isAddingToCart
                       ? null
                       : () async {
@@ -257,8 +260,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                           }
 
                           if (isAlreadyInCart) {
+                            // Pop back to BaseScreen, then switch to Cart tab (index 2)
                             locator<NavigationUtils>().pop();
-                            context.read<BottomNavProvider>().changeTab(3);
+                            context.read<BottomNavProvider>().changeTab(2);
                           } else {
                             await _handleAddToCart(product, selectedSize);
                           }
@@ -272,6 +276,48 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     );
   }
 
+  // ── Buy Now ────────────────────────────────────────────────────────────────
+  Future<void> _handleBuyNow(
+    ProductModel product,
+    String? selectedSize,
+  ) async {
+    if (selectedSize == null || selectedSize.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select a size first'),
+          duration: Duration(seconds: 1),
+        ),
+      );
+      return;
+    }
+
+    final result = await locator<CartController>().addToCart(
+      ReqCartModel(
+        productId: product.id!,
+        size: selectedSize,
+        quantity: 1,
+      ),
+    );
+
+    if (!mounted) return;
+
+    if (result != null) {
+      final buyNowTempItem = CartModel(
+        productId: result.productId ?? product.id,
+        size: result.size ?? selectedSize,
+        quantity: result.quantity ?? 1,
+        cartItemId: result.cartItemId,
+        productName: product.name,
+        effectivePrice: product.discountedPrice ?? product.price ?? 0.0,
+        image: product.imageUrl,
+      );
+
+      context.read<CheckoutProvider>().setBuyNowItem(buyNowTempItem);
+      locator<NavigationUtils>().push(routeCheckout, arguments: {paramCategoryId: product.categoryId});
+    }
+  }
+
+  // ── Login Dialog ────────────────────────────────────────────────────────────
   void _showLoginDialog() {
     showAlertDialog(
       isCancelEnable: false,
@@ -313,12 +359,23 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   ) async {
     if (_isAddingToCart) return;
 
+    // Validate size is selected
+    if (selectedSize == null || selectedSize.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select a size first'),
+          duration: Duration(seconds: 1),
+        ),
+      );
+      return;
+    }
+
     setState(() => _isAddingToCart = true);
 
     final result = await locator<CartController>().addToCart(
       ReqCartModel(
         productId: product.id!,
-        size: selectedSize!,
+        size: selectedSize,
         quantity: 1,
       ),
     );
@@ -328,8 +385,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     if (result != null) {
       context.read<CartProvider>().addItem(
             CartModel(
-              productId: product.id,
-              quantity: 1,
+              productId: result.productId ?? product.id,
+              size: result.size ?? selectedSize,
+              quantity: result.quantity ?? 1,
+              cartItemId: result.cartItemId,
+              productName: product.name,
+              effectivePrice: product.discountedPrice ?? product.price ?? 0.0,
+              image: product.imageUrl,
             ),
           );
 

@@ -72,6 +72,7 @@ class MyApp extends StatelessWidget {
             DefaultMaterialLocalizations.delegate,
             DefaultWidgetsLocalizations.delegate,
           ],
+
           supportedLocales: const [
             Locale('en', ''),
           ],

@@ -31,7 +31,7 @@ class _CartScreenState extends State<CartScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final cartData = await locator<CartController>().getCartData();
+      final cartData = await locator<CartController>().getCartData(modify: true);
       if (cartData != null) {
         context.read<CartProvider>().setCartItems(cartData.items);
       }
@@ -170,8 +170,62 @@ class _CartScreenState extends State<CartScreen> {
     );
   }
 
+  // Tracks which cart item indices are currently loading (qty update in progress)
+  final Set<int> _loadingIndices = {};
+
+  Future<void> _updateQuantity(
+      bool modify,
+    CartProvider cartProvider,
+    int index,
+    String direction, // "increase" or "decrease"
+  ) async {
+    final item = cartProvider.cartItems[index];
+    if (item.cartItemId == null) return;
+
+    // Decrease at qty=1 → remove item
+    if (direction == "decrease" && (item.quantity ?? 1) <= 1) {
+      cartProvider.removeItem(index);
+      final data = await locator<CartController>()
+          .removeFromCart(item.cartItemId!,modify);
+      if (!mounted) return;
+      if (data != null) {
+        context.read<CartProvider>().setCartItems(data.items);
+      }
+      return;
+    }
+
+    // Optimistic UI update
+    setState(() => _loadingIndices.add(index));
+    cartProvider.updateItemQuantity(
+      index,
+      direction == "increase"
+          ? (item.quantity ?? 0) + 1
+          : (item.quantity ?? 1) - 1,
+    );
+
+    // API call
+    final data = await locator<CartController>().getCartData(
+      item: ReqUpdateCartModel(
+        cartItemId: item.cartItemId,
+        value: direction,
+      ),
+      modify: modify,
+    );
+
+    if (!mounted) return;
+
+    // Sync from server
+    if (data != null) {
+      context.read<CartProvider>().setCartItems(data.items);
+    }
+
+    setState(() => _loadingIndices.remove(index));
+  }
+
+
   Widget _cartItem(CartProvider cartProvider, int index) {
     final item = cartProvider.cartItems[index];
+    final isLoading = _loadingIndices.contains(index);
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -185,7 +239,14 @@ class _CartScreenState extends State<CartScreen> {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
-            child: ImageUtils().getBase64Image(item.image),
+            child: SizedBox(
+              width: 80,
+              height: 80,
+              child: ImageUtils().getBase64Image(
+                item.image,
+                fit: BoxFit.cover,
+              ),
+            ),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -198,7 +259,7 @@ class _CartScreenState extends State<CartScreen> {
                   children: [
                     Expanded(
                       child: Text(
-                        item.productName!,
+                        item.productName ?? '',
                         style: const TextStyle(
                           fontSize: fontSize14,
                           fontWeight: fontWeightBold,
@@ -209,15 +270,23 @@ class _CartScreenState extends State<CartScreen> {
                       ),
                     ),
                     InkWell(
-                        onTap: () {
-                          cartProvider.removeItem(index);
+                        onTap: () async {
+                          final itemId = item.cartItemId;
+                          if (itemId != null) {
+                            cartProvider.removeItem(index);
+                            final data = await locator<CartController>()
+                                .removeFromCart(itemId,true);
+                            if (mounted && data != null) {
+                              context.read<CartProvider>().setCartItems(data.items);
+                            }
+                          }
                         },
                         child: SvgPicture.asset(deleteIcon)),
                   ],
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  item.size!,
+                  item.size ?? '',
                   style: const TextStyle(
                     fontSize: fontSize12,
                     color: secondaryTextColor,
@@ -228,7 +297,7 @@ class _CartScreenState extends State<CartScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      "₹  ${currencyFormat.format(item.effectivePrice)}",
+                      "₹  ${currencyFormat.format(item.effectivePrice ?? 0)}",
                       style: const TextStyle(
                         fontSize: fontSize14,
                         fontWeight: fontWeightBold,
@@ -238,46 +307,38 @@ class _CartScreenState extends State<CartScreen> {
                     Row(
                       children: [
                         _quantityButton(
-                            icon: Icons.remove,
-                            onTap: () {
-                              // ReqUpdateCartModel model =
-                              // locator<CartController>().getCartData(item: );
-                            }),
-                        const SizedBox(width: 16),
-                        Text(
-                          '${item.quantity}',
-                          style: const TextStyle(
-                            fontSize: fontSize14,
-                            fontWeight: fontWeightMedium,
-                          ),
+                          icon: Icons.remove,
+                          isLoading: isLoading,
+                          onTap: isLoading
+                              ? null
+                              : () => _updateQuantity(false,
+                                    cartProvider, index, "decrease"),
                         ),
+                        const SizedBox(width: 16),
+                        isLoading
+                            ? const SizedBox(
+                                width: 14,
+                                height: 14,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: primaryColor,
+                                ),
+                              )
+                            : Text(
+                                '${item.quantity}',
+                                style: const TextStyle(
+                                  fontSize: fontSize14,
+                                  fontWeight: fontWeightMedium,
+                                ),
+                              ),
                         const SizedBox(width: 16),
                         _quantityButton(
                           icon: Icons.add,
-                          onTap: () async {
-                            // ✅ instant UI update
-                            cartProvider.updateItemQuantity(
-                                index, (item.quantity ?? 0) + 1);
-
-                            // ✅ API call
-                            ReqUpdateCartModel model = ReqUpdateCartModel(
-                              cartItemId: item.cartItemId,
-                              value: "increase",
-                            );
-
-                            final data = await locator<CartController>()
-                                .getCartData(item: model);
-
-                            // ✅ sync with backend (important)
-                            if (data != null) {
-                              context
-                                  .read<CartProvider>()
-                                  .setCartItems(data.items);
-                            }
-                          },
-
-                          // onTap: () => cartProvider.updateItemQuantity(
-                          //     index, item.quantity!),
+                          isLoading: isLoading,
+                          onTap: isLoading
+                              ? null
+                              : () => _updateQuantity(false,
+                                    cartProvider, index, "increase"),
                         ),
                       ],
                     ),
@@ -291,20 +352,25 @@ class _CartScreenState extends State<CartScreen> {
     );
   }
 
-  Widget _quantityButton(
-      {required IconData icon, required VoidCallback onTap}) {
+  Widget _quantityButton({
+    required IconData icon,
+    required VoidCallback? onTap,
+    bool isLoading = false,
+  }) {
     return InkWell(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(4),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(4),
-          border: Border.all(color: containerBorderColor),
+          border: Border.all(
+            color: isLoading ? Colors.grey.shade300 : containerBorderColor,
+          ),
         ),
         child: Icon(
           icon,
           size: 16,
-          color: primaryTextColor,
+          color: isLoading ? Colors.grey.shade400 : primaryTextColor,
         ),
       ),
     );

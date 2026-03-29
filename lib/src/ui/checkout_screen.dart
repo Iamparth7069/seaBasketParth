@@ -1,218 +1,397 @@
-// import 'package:flutter/material.dart';
-// import 'package:provider/provider.dart';
-// import 'package:seabasket/src/base/dependencyinjection/locator.dart';
-// import 'package:seabasket/src/base/extensions/context_extension.dart';
-// import 'package:seabasket/src/base/extensions/scaffold_extension.dart';
-// import 'package:seabasket/src/base/extensions/string_extension.dart';
-// import 'package:seabasket/src/base/utils/constants/color_constant.dart';
-// import 'package:seabasket/src/base/utils/constants/fontsize_constant.dart';
-// import 'package:seabasket/src/base/utils/constants/navigation_route_constants.dart';
-// import 'package:seabasket/src/base/utils/localization/localization.dart';
-// import 'package:seabasket/src/base/utils/navigation_utils.dart';
-// import 'package:seabasket/src/controllers/auth/auth_controller.dart';
-// import 'package:seabasket/src/providers/cart_provider.dart';
-// import 'package:seabasket/src/providers/checkout_provider.dart';
-// import 'package:seabasket/src/providers/user_provider.dart';
-// import 'package:seabasket/src/widgets/primary_button.dart';
-// import 'package:seabasket/src/widgets/primary_text_field.dart';
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import 'package:seabasket/src/base/dependencyinjection/locator.dart';
+import 'package:seabasket/src/base/extensions/context_extension.dart';
+import 'package:seabasket/src/base/extensions/scaffold_extension.dart';
+import 'package:seabasket/src/base/extensions/string_extension.dart';
+import 'package:seabasket/src/base/utils/constants/color_constant.dart';
+import 'package:seabasket/src/base/utils/constants/fontsize_constant.dart';
+import 'package:seabasket/src/base/utils/constants/navigation_route_constants.dart';
+import 'package:seabasket/src/base/utils/localization/localization.dart';
+import 'package:seabasket/src/base/utils/navigation_utils.dart';
+import 'package:seabasket/src/controllers/cart_controller.dart';
+import 'package:seabasket/src/providers/cart_provider.dart';
+import 'package:seabasket/src/providers/checkout_provider.dart';
+import 'package:seabasket/src/widgets/primary_button.dart';
+import 'package:seabasket/src/widgets/primary_text_field.dart';
 
-// class CheckoutScreen extends StatefulWidget {
-//   const CheckoutScreen({super.key});
+import '../controllers/auth/auth_controller.dart';
 
-//   @override
-//   State<CheckoutScreen> createState() => _CheckoutScreenState();
-// }
+class CheckoutScreen extends StatefulWidget {
+  final int? categoryId;
+  const CheckoutScreen({super.key, this.categoryId});
 
-// class _CheckoutScreenState extends State<CheckoutScreen> {
-//   final _formKey = GlobalKey<FormState>();
-//   late TextEditingController _addressController;
+  @override
+  State<CheckoutScreen> createState() => _CheckoutScreenState();
+}
 
-//   @override
-//   void initState() {
-//     super.initState();
-//     _addressController = TextEditingController();
+class _CheckoutScreenState extends State<CheckoutScreen> {
+  final _formKey = GlobalKey<FormState>();
+  late TextEditingController _addressController;
+  final NumberFormat _fmt = NumberFormat.decimalPattern('en_in');
 
-//     WidgetsBinding.instance.addPostFrameCallback((_) {
-//       final user = context.read<UserProvider>().currentUser;
-//       // final savedAddress = user?.address ?? "";
-//       // _addressController.text = savedAddress;
-//       // if (savedAddress.isEmpty) {
-//       //   context.read<CheckoutProvider>().setEditing(true);
-//       // }
-//     });
-//   }
+  @override
+  void initState() {
+    super.initState();
+    _addressController = TextEditingController();
+    
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final checkoutProvider = context.read<CheckoutProvider>();
 
-//   @override
-//   void dispose() {
-//     _addressController.dispose();
-//     super.dispose();
-//   }
+      final cartData = await locator<CartController>().getCartData(modify: true);
+      if (cartData != null && mounted) {
+        if (cartData.deliveryAddress != null &&
+            cartData.deliveryAddress!.isNotEmpty) {
+          _addressController.text = cartData.deliveryAddress!;
+        }
 
-//   @override
-//   Widget build(BuildContext context) {
-//     return Consumer2<CartProvider, CheckoutProvider>(
-//       builder: (context, cartProvider, checkoutProvider, child) {
-//         return SingleChildScrollView(
-//           padding: EdgeInsets.symmetric(
-//             horizontal: context.getWidth(0.05),
-//             vertical: context.getHeight(0.02),
-//           ),
-//           child: Form(
-//             key: _formKey,
-//             child: Column(
-//               crossAxisAlignment: CrossAxisAlignment.start,
-//               children: [
-//                 Text(
-//                   Localization.of().deliveryAddressText,
-//                   style: const TextStyle(
-//                     fontSize: fontSize18,
-//                     fontWeight: fontWeightBold,
-//                     color: primaryTextColor,
-//                   ),
-//                 ),
-//                 SizedBox(height: context.getHeight(0.02)),
-//                 _addressSection(checkoutProvider),
-//                 SizedBox(height: context.getHeight(0.03)),
-//                 const Divider(),
-//                 SizedBox(height: context.getHeight(0.02)),
-//                 Text(
-//                   Localization.of().orderSummaryText,
-//                   style: const TextStyle(
-//                     fontSize: fontSize18,
-//                     fontWeight: fontWeightBold,
-//                     color: primaryTextColor,
-//                   ),
-//                 ),
-//                 SizedBox(height: context.getHeight(0.02)),
-//                 _orderSummary(cartProvider),
-//                 SizedBox(height: context.getHeight(0.03)),
-//                 checkoutProvider.isLoading
-//                     ? const Center(child: CircularProgressIndicator())
-//                     : PrimaryButton(
-//                         buttonText: Localization.of().contiunePaymentText,
-//                         buttonColor: primaryButtonColor,
-//                         backgroundColor: primaryButtonColor,
-//                         trailingIcon: Icons.arrow_forward,
-//                         onButtonClick: _handleContinue,
-//                       ),
-//                 SizedBox(height: context.getHeight(0.02)),
-//               ],
-//             ),
-//           ),
-//         ).commonScaffold(
-//           context: context,
-//           title: Localization.of().checkoutText,
-//           centerTitle: true,
-//           leading: IconButton(
-//             onPressed: locator<NavigationUtils>().pop,
-//             icon: const Icon(Icons.arrow_back),
-//           ),
-//         );
-//       },
-//     );
-//   }
+        if (!checkoutProvider.isBuyNow) {
+          context.read<CartProvider>().setCartItems(cartData.items);
+        }
+      }
 
-//   Widget _addressSection(CheckoutProvider checkoutProvider) {
-//     return Column(
-//       crossAxisAlignment: CrossAxisAlignment.start,
-//       children: [
-//         PrimaryTextField(
-//           label: "",
-//           hint: Localization.of().addressHint,
-//           controller: _addressController,
-//           maxLines: 3,
-//           readOnly: !checkoutProvider.isEditing,
-//           contentPadding: const EdgeInsets.all(14),
-//           textInputAction: TextInputAction.done,
-//           validateFunction: (value) =>
-//               value?.isFieldEmpty(Localization.of().msgAddressEmpty),
-//         ),
-//         SizedBox(height: context.getHeight(0.01)),
-//         Align(
-//           alignment: Alignment.centerRight,
-//           child: TextButton(
-//             onPressed: () {
-//               checkoutProvider.toggleEditing();
-//             },
-//             child: Text(
-//               checkoutProvider.isEditing
-//                   ? Localization.of().save
-//                   : Localization.of().changeText,
-//               style: const TextStyle(
-//                 color: primaryButtonColor,
-//                 fontWeight: fontWeightMedium,
-//               ),
-//             ),
-//           ),
-//         ),
-//       ],
-//     );
-//   }
+      // If it IS a Buy Now checkout, update the buy-now summary using the patch API
+      if (checkoutProvider.isBuyNow) {
+        final buyNowCartItemId = checkoutProvider.buyNowItem?.cartItemId;
+        if (buyNowCartItemId != null) {
+          final updatedBuyNow = await locator<CartController>()
+              .getCartItemPatch(buyNowCartItemId);
+          if (updatedBuyNow != null && mounted) {
+            checkoutProvider.setBuyNowItem(updatedBuyNow);
+            // Optionally set address if available in the buy-now response (if backend returns it, though it usually doesn't, we can skip)
+          }
+        }
+      }
+    });
+  }
 
-//   Widget _orderSummary(CartProvider cartProvider) {
-//     return Container(
-//       padding: const EdgeInsets.all(16),
-//       decoration: BoxDecoration(
-//         borderRadius: BorderRadius.circular(12),
-//         border: Border.all(color: containerBorderColor),
-//       ),
-//       child: Column(
-//         children: [
-//           _summaryRow(
-//             Localization.of().subTotalText,
-//             "₹ ${cartProvider.subtotal}",
-//           ),
-//           SizedBox(height: context.getHeight(0.01)),
-//           _summaryRow(
-//             Localization.of().shippingFeeText,
-//             "₹ ${cartProvider.shippingFee}",
-//           ),
-//           const Divider(height: 24),
-//           _summaryRow(
-//             Localization.of().totalText,
-//             "₹ ${cartProvider.total}",
-//           ),
-//         ],
-//       ),
-//     );
-//   }
+  @override
+  void dispose() {
+    _addressController.dispose();
+    // Reset buy-now state when the user leaves checkout
+    context.read<CheckoutProvider>().clearBuyNow();
+    super.dispose();
+  }
 
-//   Widget _summaryRow(
-//     String label,
-//     String value,
-//   ) {
-//     return Row(
-//       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//       children: [
-//         Text(
-//           label,
-//           style: const TextStyle(
-//             fontSize: fontSize14,
-//             color: primaryTextColor,
-//             fontWeight: fontWeightRegular,
-//           ),
-//         ),
-//         Text(
-//           value,
-//           style: const TextStyle(
-//               fontSize: fontSize16,
-//               color: primaryTextColor,
-//               fontWeight: fontWeightBold),
-//         ),
-//       ],
-//     );
-//   }
+  @override
+  Widget build(BuildContext context) {
+    return Consumer2<CartProvider, CheckoutProvider>(
+      builder: (context, cartProvider, checkoutProvider, child) {
+        return SingleChildScrollView(
+          padding: EdgeInsets.symmetric(
+            horizontal: context.getWidth(0.05),
+            vertical: context.getHeight(0.02),
+          ),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ── Delivery Address ────────────────────────────────────────
+                Text(
+                  Localization.of().deliveryAddressText,
+                  style: const TextStyle(
+                    fontSize: fontSize18,
+                    fontWeight: fontWeightBold,
+                    color: primaryTextColor,
+                  ),
+                ),
+                SizedBox(height: context.getHeight(0.02)),
+                _addressSection(checkoutProvider),
+                SizedBox(height: context.getHeight(0.03)),
+                const Divider(),
+                SizedBox(height: context.getHeight(0.02)),
 
-//   void _handleContinue() async {
-//     if (!_formKey.currentState!.validate()) return;
-//     FocusScope.of(context).unfocus();
+                // ── Order Summary ────────────────────────────────────────────
+                Text(
+                  Localization.of().orderSummaryText,
+                  style: const TextStyle(
+                    fontSize: fontSize18,
+                    fontWeight: fontWeightBold,
+                    color: primaryTextColor,
+                  ),
+                ),
+                SizedBox(height: context.getHeight(0.02)),
 
-//     await context.read<AuthController>().updateProfile(
-//           context,
-//           context.read<UserProvider>().currentUser?.phoneNumber ?? "",
-//           _addressController.text,
-//         );
+                // Show buy-now summary OR full cart summary
+                checkoutProvider.isBuyNow
+                    ? _buyNowOrderSummary(checkoutProvider)
+                    : _cartOrderSummary(cartProvider),
 
-//     locator<NavigationUtils>().pushReplacement(routePayment);
-//   }
-// }
+                SizedBox(height: context.getHeight(0.03)),
+
+                // ── Continue Button ──────────────────────────────────────────
+                checkoutProvider.isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : PrimaryButton(
+                        buttonText: Localization.of().contiunePaymentText,
+                        buttonColor: primaryButtonColor,
+                        backgroundColor: primaryButtonColor,
+                        trailingIcon: Icons.arrow_forward,
+                        onButtonClick: _handleContinue,
+                      ),
+                SizedBox(height: context.getHeight(0.02)),
+              ],
+            ),
+          ),
+        ).commonScaffold(
+          context: context,
+          title: Localization.of().checkoutText,
+          centerTitle: true,
+          leading: IconButton(
+            onPressed: locator<NavigationUtils>().pop,
+            icon: const Icon(Icons.arrow_back),
+          ),
+        );
+      },
+    );
+  }
+
+  // ── Address Section ─────────────────────────────────────────────────────────
+  Widget _addressSection(CheckoutProvider checkoutProvider) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        PrimaryTextField(
+          label: "",
+          hint: Localization.of().addressHint,
+          controller: _addressController,
+          maxLines: 3,
+          readOnly: !checkoutProvider.isEditing,
+          contentPadding: const EdgeInsets.all(14),
+          textInputAction: TextInputAction.done,
+          validateFunction: (value) =>
+              value?.isFieldEmpty(Localization.of().msgAddressEmpty),
+        ),
+        SizedBox(height: context.getHeight(0.01)),
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton(
+            onPressed: () async {
+              if (checkoutProvider.isEditing) {
+                // User is saving the address
+                final newAddress = _addressController.text.trim();
+                if (newAddress.isNotEmpty) {
+                  await locator<AuthController>().updateProfile(
+                    context,
+                    address: newAddress,
+                  );
+                }
+              }
+              checkoutProvider.toggleEditing();
+            },
+            child: Text(
+              checkoutProvider.isEditing
+                  ? Localization.of().save
+                  : Localization.of().changeText,
+              style: const TextStyle(
+                color: primaryButtonColor,
+                fontWeight: fontWeightMedium,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── Buy Now Order Summary ───────────────────────────────────────────────────
+  Widget _buyNowOrderSummary(CheckoutProvider checkoutProvider) {
+    final item = checkoutProvider.buyNowItem;
+    if (item == null) return const SizedBox.shrink();
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: containerBorderColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Unavailability warning
+          if (item.isAvailable == false) ...[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.red.shade50,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.red.shade200),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.warning_amber_rounded,
+                      color: Colors.red.shade600, size: 18),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'This item is currently unavailable.',
+                      style: TextStyle(
+                        fontSize: fontSize12,
+                        color: Colors.red.shade700,
+                        fontWeight: fontWeightMedium,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+
+          // Product info card
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF5F5F5),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                // Product image
+                if (item.image != null && item.image!.isNotEmpty) ...[
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.memory(
+                      Uri.parse(item.image!).data!.contentAsBytes(),
+                      width: 64,
+                      height: 64,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => const SizedBox(
+                        width: 64,
+                        height: 64,
+                        child: Icon(Icons.image_not_supported_outlined,
+                            size: 28, color: Colors.grey),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                ],
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        item.productName ?? '',
+                        style: const TextStyle(
+                          fontSize: fontSize14,
+                          fontWeight: fontWeightBold,
+                          color: primaryTextColor,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Size: ${item.size ?? ''}',
+                        style: const TextStyle(
+                          fontSize: fontSize12,
+                          color: secondaryTextColor,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Qty: ${item.quantity ?? 1}',
+                        style: const TextStyle(
+                          fontSize: fontSize12,
+                          color: secondaryTextColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Text(
+                  '₹ ${_fmt.format(item.effectivePrice ?? 0)}',
+                  style: const TextStyle(
+                    fontSize: fontSize14,
+                    fontWeight: fontWeightBold,
+                    color: primaryTextColor,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          _summaryRow(
+            Localization.of().subTotalText,
+            '₹ ${_fmt.format(checkoutProvider.buyNowSubtotal)}',
+          ),
+          SizedBox(height: context.getHeight(0.01)),
+          _summaryRow(
+            Localization.of().shippingFeeText,
+            '₹ ${_fmt.format(checkoutProvider.shippingFee)}',
+          ),
+          const Divider(height: 24),
+          _summaryRow(
+            Localization.of().totalText,
+            '₹ ${_fmt.format(checkoutProvider.buyNowTotal)}',
+            isBold: true,
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Full Cart Order Summary ─────────────────────────────────────────────────
+  Widget _cartOrderSummary(CartProvider cartProvider) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: containerBorderColor),
+      ),
+      child: Column(
+        children: [
+          _summaryRow(
+            Localization.of().subTotalText,
+            '₹ ${_fmt.format(cartProvider.subtotal)}',
+          ),
+          SizedBox(height: context.getHeight(0.01)),
+          _summaryRow(
+            Localization.of().shippingFeeText,
+            '₹ ${_fmt.format(cartProvider.shippingFee)}',
+          ),
+          const Divider(height: 24),
+          _summaryRow(
+            Localization.of().totalText,
+            '₹ ${_fmt.format(cartProvider.total)}',
+            isBold: true,
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Summary Row ─────────────────────────────────────────────────────────────
+  Widget _summaryRow(String label, String value, {bool isBold = false}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: fontSize14,
+            color: primaryTextColor,
+            fontWeight: isBold ? fontWeightBold : fontWeightRegular,
+          ),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: isBold ? fontSize18 : fontSize16,
+            color: primaryTextColor,
+            fontWeight: isBold ? fontWeightBold : fontWeightSemiBold,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── Continue ────────────────────────────────────────────────────────────────
+  void _handleContinue() async {
+    if (!_formKey.currentState!.validate()) return;
+    FocusScope.of(context).unfocus();
+    locator<NavigationUtils>().pushReplacement(routePayment);
+  }
+}

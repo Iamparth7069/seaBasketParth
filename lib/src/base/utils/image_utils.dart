@@ -4,9 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:seabasket/src/base/utils/constants/image_constant.dart';
 
 class ImageUtils {
-  Widget getBase64Image(String? base64String, {BoxFit fit = BoxFit.cover}) {
+  Widget getBase64Image(
+    String? base64String, {
+    BoxFit fit = BoxFit.cover,
+    bool fillHeight = true,
+  }) {
     if (base64String == null || base64String.isEmpty) {
-      return Image.asset(notFound);
+      return Image.asset(notFound, fit: fit);
     }
 
     try {
@@ -18,10 +22,14 @@ class ImageUtils {
 
       return Image.memory(
         bytes,
-        errorBuilder: (context, error, stackTrace) => Image.asset(notFound),
+        fit: fit,
+        width: double.infinity,
+        height: fillHeight ? double.infinity : null,
+        errorBuilder: (context, error, stackTrace) =>
+            Image.asset(notFound, fit: fit),
       );
     } catch (e) {
-      return Image.asset(notFound);
+      return Image.asset(notFound, fit: fit);
     }
   }
 }

@@ -91,21 +91,24 @@ class NavigationUtils {
           settings: settings,
           builder: (_) => const ProfileScreen(),
         );
-      // case routeCheckout:
-      //   return MaterialPageRoute(
-      //     settings: settings,
-      //     builder: (_) => const CheckoutScreen(),
-      //   );
+      case routeCheckout:
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => CheckoutScreen(
+            categoryId: args?[paramCategoryId],
+          ),
+        );
       case routePayment:
         return MaterialPageRoute(
           settings: settings,
           builder: (_) => const PaymentScreen(),
         );
-      // case routeOrderDetail:
-      //   return MaterialPageRoute(
-      //     settings: settings,
-      //     builder: (_) => const OrderDetailScreen(),
-      //   );
+      case routeOrderDetail:
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => const OrderDetailScreen(),
+        );
+
       case routeOrderStatus:
         return MaterialPageRoute(
           settings: settings,

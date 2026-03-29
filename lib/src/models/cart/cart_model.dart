@@ -18,6 +18,8 @@ class CartModel {
   String? image;
   String? size;
   int? quantity;
+  @JsonKey(name: 'is_available')
+  bool? isAvailable;
 
   CartModel({
     this.message,
@@ -25,6 +27,11 @@ class CartModel {
     this.productId,
     this.size,
     this.quantity,
+    this.productName,
+    this.effectivePrice,
+    this.itemSubtotal,
+    this.image,
+    this.isAvailable,
   });
 
   factory CartModel.fromJson(Map<String, dynamic> json) =>

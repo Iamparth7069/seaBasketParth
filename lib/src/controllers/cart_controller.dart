@@ -8,9 +8,13 @@ import 'package:seabasket/src/models/request/req_cart_model.dart';
 import 'package:seabasket/src/models/request/req_update_cart_model.dart';
 import 'package:seabasket/src/models/response/res_cart_model.dart';
 
+import '../base/utils/progress_dialog_utils.dart';
+
 class CartController {
   Future<CartModel?> addToCart(ReqCartModel item) async {
+    ProgressDialogUtils.showProgressDialog();
     final response = await locator<CartApiManager>().addToCart(item);
+    ProgressDialogUtils.dismissProgressDialog();
 
     if (response == null) {
       return null;
@@ -19,34 +23,45 @@ class CartController {
     return response.data;
   }
 
-  Future<CartDataModel?> getCartData({ReqUpdateCartModel? item}) async {
-    final respones = await locator<CartApiManager>().updateCartApiCall(item);
-    if (respones == null) return null;
-    return respones.data;
-  }
+  Future<CartModel?> getCartItemPatch(int cartItemId) async {
+    ProgressDialogUtils.showProgressDialog();
+    final response = await locator<CartApiManager>().getCartItemPatch(cartItemId);
+    ProgressDialogUtils.dismissProgressDialog();
 
-  Future<void> removeFromCart(int id) async {
-    await locator<CartApiManager>().removeFromCart(id);
-  }
-
-  Future<void> updateQuantity(int id, int quantity) async {
-    await locator<CartApiManager>().updateQuantity(id, quantity);
-  }
-
-  double getSubtotal(List<CartItem> cartItems) {
-    double sum = 0;
-    for (var item in cartItems) {
-      sum += (item.price ?? 0.0) * (item.quantity ?? 1);
+    if (response == null) {
+      return null;
     }
-    return sum;
+
+    return response.data;
   }
 
-  double getTotal(List<CartItem> cartItems, double shippingFee) {
-    if (cartItems.isEmpty) return 0;
-    return getSubtotal(cartItems) + shippingFee;
-  }
+  Future<CartDataModel?> getCartData({
+    ReqUpdateCartModel? item,
+    bool modify = true,
+  }) async {
+    print("modify Values is ${modify}");
 
-  Future<void> clearCart() async {
-    await locator<CartApiManager>().clearCart();
+    if (modify) {
+      ProgressDialogUtils.showProgressDialog();
+    }
+
+    final response = await locator<CartApiManager>()
+        .updateCartApiCall(item);
+
+    if (modify) {
+      ProgressDialogUtils.dismissProgressDialog();
+    }
+
+    if (response == null) return null;
+    return response.data;
+  }
+  Future<CartDataModel?> removeFromCart(int id,bool? modify) async {
+    return await getCartData(
+      item: ReqUpdateCartModel(
+        cartItemId: id,
+        value: "remove",
+      ),
+      modify: modify!
+    );
   }
 }
