@@ -392,6 +392,41 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   void _handleContinue() async {
     if (!_formKey.currentState!.validate()) return;
     FocusScope.of(context).unfocus();
-    locator<NavigationUtils>().pushReplacement(routePayment);
+
+    final checkoutProvider = context.read<CheckoutProvider>();
+    final cartProvider = context.read<CartProvider>();
+
+    final double totalAmount = checkoutProvider.isBuyNow
+        ? checkoutProvider.buyNowTotal
+        : cartProvider.total;
+
+    final result = await checkoutProvider.processStripePayment(totalAmount);
+
+    if (!mounted) return;
+
+    if (result == 'success') {
+      // Navigate to success screen or simply show snackbar and reset
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Payment Successful!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      
+      checkoutProvider.clearBuyNow();
+      // Adjust to your actual success route (e.g. routeOrderSuccess)
+      locator<NavigationUtils>().pushReplacement(routeHome); 
+    } else if (result == 'canceled') {
+      // User closed the payment sheet manually
+      return;
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Payment Failed: $result'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    }
   }
 }

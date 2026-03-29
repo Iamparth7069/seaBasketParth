@@ -10,3 +10,6 @@ const String apiGetProduct = "products/get-product";
 const String apiUpdateUser = "user/profile";
 const String apiAddCart = "cart/add-cart";
 const String apiUpdateCart = "cart/";
+
+const String apiPaymentIntent = "payment/payment-intent";
+const String apiConfirmPayment = "payment/confirm-payment";

@@ -16,12 +16,14 @@ import 'package:seabasket/src/providers/theme_provier.dart';
 import 'package:seabasket/src/widgets/themewidgets/theme_data.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 
 import 'base/dependencyinjection/locator.dart';
 import 'base/utils/navigation_utils.dart';
 
 void mainDelegate() async {
   WidgetsFlutterBinding.ensureInitialized();
+  Stripe.publishableKey = 'pk_test_51TCxjePFAVGhlGbEM8Egihh6hfupnUH4PPtlCLpVJuSpEikYgeTl6gnSQLcTBLUMQ659HkV2O5NuGJEzzgXOA2Fg00lppHhb7N';
   setupLocator();
   await init();
   await initializeDateFormatting();
