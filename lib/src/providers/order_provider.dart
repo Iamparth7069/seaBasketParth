@@ -6,13 +6,22 @@ class OrderProvider extends ChangeNotifier {
   List<ResMyOrderModel> _myOrders = [];
   List<ResMyOrderModel> get myOrders => _myOrders;
 
+  List<ResMyOrderModel> _historyOrders = [];
+  List<ResMyOrderModel> get historyOrders => _historyOrders;
+
   void setMyOrders(List<ResMyOrderModel> orders) {
     _myOrders = orders;
     notifyListeners();
   }
 
+  void setHistoryOrders(List<ResMyOrderModel> orders) {
+    _historyOrders = orders;
+    notifyListeners();
+  }
+
   void clearOrders() {
     _myOrders = [];
+    _historyOrders = [];
     notifyListeners();
   }
 }

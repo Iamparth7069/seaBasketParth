@@ -4,6 +4,8 @@ import 'package:seabasket/src/base/dependencyinjection/locator.dart';
 import 'package:seabasket/src/base/utils/image_utils.dart';
 import 'package:seabasket/src/controllers/order_controller.dart';
 import 'package:seabasket/src/models/response/res_my_order_model.dart';
+import 'package:provider/provider.dart';
+import 'package:seabasket/src/providers/order_provider.dart';
 
 class OrderHistory extends StatefulWidget {
   final int? orderId;
@@ -17,55 +19,48 @@ class OrderHistory extends StatefulWidget {
 class _OrderHistoryScreenState extends State<OrderHistory> {
   final NumberFormat currencyFormat = NumberFormat.decimalPattern('en_in');
 
-  // ✅ Local state — completely independent from OrderProvider
-  List<ResMyOrderModel> _orders = [];
-  bool _isLoading = true;
-
   @override
   void initState() {
     super.initState();
-    _fetchOrderDetail();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _fetchOrderDetail();
+    });
   }
 
   Future<void> _fetchOrderDetail() async {
+    final provider = context.read<OrderProvider>();
+    
     final orders =
-    await locator<OrderController>().getMyOrders(orderId: widget.orderId);
-
-    // 🔍 Debug — remove after fixing
-    debugPrint('Orders count: ${orders.length}');
-    for (final order in orders) {
-      debugPrint('Order ID: ${order.orderId}');
-      debugPrint('Items count: ${order.items?.length}');
-      debugPrint('Items: ${order.items}');
-    }
+        await locator<OrderController>().getMyOrders(orderId: widget.orderId);
 
     if (mounted) {
-      setState(() {
-        _orders = orders;
-        _isLoading = false;
-      });
+      provider.setHistoryOrders(orders);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Order History"),
-        centerTitle: true,
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _orders.isEmpty
-          ? const Center(child: Text("No orders found."))
-          : ListView.separated(
-          padding: const EdgeInsets.all(16),
-          itemCount: _orders.length,
-          separatorBuilder: (context, _) => const SizedBox(height: 16),
-      itemBuilder: (context, index) {
-        return _orderCard(_orders[index]);
+    return Consumer<OrderProvider>(
+      builder: (context, provider, child) {
+        final _orders = provider.historyOrders;
+
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text("Order History"),
+            centerTitle: true,
+          ),
+          body: _orders.isEmpty
+              ? const Center(child: Text("No orders found."))
+              : ListView.separated(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: _orders.length,
+                  separatorBuilder: (context, _) => const SizedBox(height: 16),
+                  itemBuilder: (context, index) {
+                    return _orderCard(_orders[index]);
+                  },
+                ),
+        );
       },
-    ),
     );
   }
 

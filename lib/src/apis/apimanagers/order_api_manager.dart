@@ -13,13 +13,15 @@ class OrderApiManager {
     final response = await locator<ApiService>().get(apiGetMyOrders,
         params: orderId != null ? {'order_id': orderId.toString()} : null);
 
-    if (response != null && response.data != null) {
-      if (response.data is Map<String, dynamic> &&
-          response.data['data'] is List) {
+    if (response != null && response.data != null && response.data is Map<String, dynamic>) {
+      if (response.data['data'] is List) {
         final List<dynamic> dataList = response.data['data'];
         return dataList
             .map((e) => ResMyOrderModel.fromJson(e as Map<String, dynamic>))
             .toList();
+      } else if (response.data['data'] is Map<String, dynamic>) {
+        final Map<String, dynamic> dataMap = response.data['data'];
+        return [ResMyOrderModel.fromJson(dataMap)];
       }
     }
     return null;
