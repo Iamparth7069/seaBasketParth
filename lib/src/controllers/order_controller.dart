@@ -1,19 +1,18 @@
 import 'package:seabasket/src/apis/apimanagers/order_api_manager.dart';
 import 'package:seabasket/src/base/dependencyinjection/locator.dart';
+import 'package:seabasket/src/base/utils/progress_dialog_utils.dart';
 import 'package:seabasket/src/models/order.dart';
+import 'package:seabasket/src/models/response/order_item_model.dart';
 import 'package:seabasket/src/models/response/res_my_order_model.dart';
 
 class OrderController {
+  Future<List<ResMyOrderModel>> getMyOrders({int? orderId}) async {
+    ProgressDialogUtils.showProgressDialog();
 
-  Future<List<Order>> getOrders() async {
-    return await locator<OrderApiManager>().getOrdersApiCall();
-  }
+    final orders = await locator<OrderApiManager>().getMyOrdersApiCall(orderId);
 
-  Future<void> clearOrders() async {
-    await locator<OrderApiManager>().clearOrdersApiCall();
-  }
+    ProgressDialogUtils.dismissProgressDialog();
 
-  Future<List<ResMyOrderModel>?> getMyOrders() async {
-    return await locator<OrderApiManager>().getMyOrdersApiCall();
+    return orders ?? [];
   }
 }

@@ -72,7 +72,6 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
                   final isCompleted =
                       status.index <= orderStatusProvider.currentStatus.index;
                   final isLast = status == OrderStatus.delivered;
-
                   return _buildStep(
                     title: status.displayTitle,
                     subtitle: status.displaySubtitle,

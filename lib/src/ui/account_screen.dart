@@ -97,12 +97,13 @@ class _AccountScreenState extends State<AccountScreen> {
         message: Localization.of().msgLogoutConfirm,
         okButtonTitle: Localization.of().yes,
         okButtonAction: () {
-          locator<NavigationUtils>().pop();
-          // context.read<OrderProvider>().clearOrders();
-          context.read<CheckoutProvider>().clearCardDetails();
-          context.read<AuthController>().logout(context);
-          locator<NavigationUtils>().pushAndRemoveUntil(routeBase);
-          context.read<BottomNavProvider>().changeTab(0);
+          locator<NavigationUtils>().pushAndRemoveUntil(routeLogin);
+
+          // locator<NavigationUtils>().pop();
+          // // context.read<OrderProvider>().clearOrders();
+          // context.read<CheckoutProvider>().clearCardDetails();
+          // context.read<AuthController>().logout(context);
+          // context.read<BottomNavProvider>().changeTab(0);
         },
         isCancelEnable: true);
   }

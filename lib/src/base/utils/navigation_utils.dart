@@ -10,8 +10,8 @@ import 'package:seabasket/src/ui/cart_screen.dart';
 import 'package:seabasket/src/ui/checkout_screen.dart';
 import 'package:seabasket/src/ui/home/search_screen.dart';
 import 'package:seabasket/src/ui/order_detail_screen.dart';
+import 'package:seabasket/src/ui/order_history.dart';
 import 'package:seabasket/src/ui/order_status_screen.dart';
-import 'package:seabasket/src/ui/payment_screen.dart';
 import 'package:seabasket/src/ui/product_detail_screen.dart';
 import 'package:seabasket/src/ui/profile_screen.dart';
 import 'package:seabasket/src/ui/splash/splash_screen.dart';
@@ -94,28 +94,24 @@ class NavigationUtils {
       case routeCheckout:
         return MaterialPageRoute(
           settings: settings,
-          builder: (_) => CheckoutScreen(
-            categoryId: args?[paramCategoryId],
-          ),
-        );
-      case routePayment:
-        return MaterialPageRoute(
-          settings: settings,
-          builder: (_) => const PaymentScreen(),
+          builder: (_) => const CheckoutScreen(),
         );
       case routeOrderDetail:
         return MaterialPageRoute(
           settings: settings,
           builder: (_) => const OrderDetailScreen(),
         );
-
+      case routeOrderHistory:
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => OrderHistory(
+            orderId: args?[paramOrderId],
+          ),
+        );
       case routeOrderStatus:
         return MaterialPageRoute(
           settings: settings,
-          builder: (_) => OrderStatusScreen(
-            orderId: args?[paramOrderId],
-            status: args?[paramOrderStatus],
-          ),
+          builder: (_) => const OrderStatusScreen(),
         );
 
       default:

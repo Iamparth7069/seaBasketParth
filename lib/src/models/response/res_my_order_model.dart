@@ -1,5 +1,7 @@
 import 'package:json_annotation/json_annotation.dart';
 
+import 'order_item_model.dart';
+
 part 'res_my_order_model.g.dart';
 
 @JsonSerializable()
@@ -12,12 +14,18 @@ class ResMyOrderModel {
   final double? totalAmount;
   @JsonKey(name: 'placed_at')
   final String? placedAt;
+  @JsonKey(name: 'item_count')
+  final int? itemCount;
+  @JsonKey(name: 'items')
+  List<OrderItemModel>? items;
 
   ResMyOrderModel({
     this.orderId,
     this.status,
     this.totalAmount,
     this.placedAt,
+    this.items,
+    this.itemCount,
   });
 
   factory ResMyOrderModel.fromJson(Map<String, dynamic> json) =>

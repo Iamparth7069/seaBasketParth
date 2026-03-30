@@ -28,3 +28,6 @@ const String routePayment = "routePayment";
 
 // order statud
 const String routeOrderStatus = "routeOrderStatus";
+
+const String routeOrderHistory = "routeOrderHistory";
+
