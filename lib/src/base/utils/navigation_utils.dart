@@ -112,7 +112,10 @@ class NavigationUtils {
       case routeOrderStatus:
         return MaterialPageRoute(
           settings: settings,
-          builder: (_) => const OrderStatusScreen(),
+          builder: (_) => OrderStatusScreen(
+            orderId: args?[paramOrderId],
+            status: args?[paramOrderStatus],
+          ),
         );
 
       default:

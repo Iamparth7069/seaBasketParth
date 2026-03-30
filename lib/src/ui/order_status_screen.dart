@@ -14,7 +14,10 @@ import 'package:seabasket/src/providers/order_status_provider.dart';
 import 'package:seabasket/src/widgets/primary_button.dart';
 
 class OrderStatusScreen extends StatefulWidget {
-  const OrderStatusScreen({super.key});
+  final String? orderId;
+  final String? status;
+
+  const OrderStatusScreen({super.key, this.orderId, this.status});
 
   @override
   State<OrderStatusScreen> createState() => _OrderStatusScreenState();
@@ -25,7 +28,11 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<OrderStatusProvider>().loadOrderStatus();
+      if (widget.status != null) {
+        context.read<OrderStatusProvider>().setStatusFromString(widget.status!);
+      } else if (widget.orderId != null) {
+        context.read<OrderStatusProvider>().loadOrderStatus(widget.orderId!);
+      }
     });
   }
 
@@ -41,7 +48,7 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
           canPop: false,
           onPopInvokedWithResult: (didPop, result) {
             if (!didPop) {
-              _handleHomeScreen();
+              locator<NavigationUtils>().pop();
             }
           },
           child: SingleChildScrollView(
@@ -87,7 +94,9 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
             title: Localization.of().trackOrderTitle,
             centerTitle: true,
             leading: IconButton(
-              onPressed: _handleHomeScreen,
+              onPressed: () {
+                locator<NavigationUtils>().pop();
+              },
               icon: const Icon(Icons.arrow_back),
             ),
           ),
@@ -266,4 +275,7 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
     context.read<BottomNavProvider>().changeTab(0);
     locator<NavigationUtils>().pushAndRemoveUntil(routeBase);
   }
+
+
+
 }

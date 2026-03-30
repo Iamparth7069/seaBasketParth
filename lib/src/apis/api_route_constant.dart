@@ -13,3 +13,4 @@ const String apiUpdateCart = "cart/";
 
 const String apiPaymentIntent = "payment/payment-intent";
 const String apiConfirmPayment = "payment/confirm-payment";
+const String apiGetMyOrders = "orders/user/my-orders";

@@ -51,7 +51,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         }
       }
 
-      // If it IS a Buy Now checkout, update the buy-now summary using the patch API
       if (checkoutProvider.isBuyNow) {
         final buyNowCartItemId = checkoutProvider.buyNowItem?.cartItemId;
         if (buyNowCartItemId != null) {
@@ -66,11 +65,19 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     });
   }
 
+  CheckoutProvider? _checkoutProvider;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _checkoutProvider ??= context.read<CheckoutProvider>();
+  }
+
   @override
   void dispose() {
     _addressController.dispose();
     // Reset buy-now state when the user leaves checkout
-    context.read<CheckoutProvider>().clearBuyNow();
+    _checkoutProvider?.clearBuyNow();
     super.dispose();
   }
 
@@ -415,7 +422,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       
       checkoutProvider.clearBuyNow();
       // Adjust to your actual success route (e.g. routeOrderSuccess)
-      locator<NavigationUtils>().pushReplacement(routeHome); 
+      locator<NavigationUtils>().pushReplacement(routeOrderDetail);
     } else if (result == 'canceled') {
       // User closed the payment sheet manually
       return;

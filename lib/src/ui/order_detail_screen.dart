@@ -7,10 +7,15 @@ import 'package:seabasket/src/base/extensions/scaffold_extension.dart';
 import 'package:seabasket/src/base/utils/constants/color_constant.dart';
 import 'package:seabasket/src/base/utils/constants/fontsize_constant.dart';
 import 'package:seabasket/src/base/utils/constants/navigation_route_constants.dart';
+import 'package:seabasket/src/base/utils/constants/dic_params.dart';
 import 'package:seabasket/src/base/utils/localization/localization.dart';
 import 'package:seabasket/src/base/utils/navigation_utils.dart';
+import 'package:seabasket/src/controllers/order_controller.dart';
 import 'package:seabasket/src/providers/order_provider.dart';
 import 'package:seabasket/src/providers/user_provider.dart';
+
+import '../providers/bottom_nav_provider.dart';
+import '../providers/order_status_provider.dart';
 
 class OrderDetailScreen extends StatefulWidget {
   const OrderDetailScreen({super.key});
@@ -26,8 +31,20 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<OrderProvider>().loadOrders();
+      _fetchOrders();
     });
+  }
+
+  Future<void> _fetchOrders() async {
+    final provider = context.read<OrderProvider>();
+    provider.setLoading(true);
+    final response = await locator<OrderController>().getMyOrders();
+    if (response != null) {
+      provider.setMyOrders(response);
+    } else {
+      provider.setMyOrders([]);
+    }
+    provider.setLoading(false);
   }
 
   @override
@@ -106,7 +123,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           );
         }
 
-        if (orderProvider.orders.isEmpty) {
+        if (orderProvider.myOrders.isEmpty) {
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -138,140 +155,116 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           );
         }
 
-        final groupOrder = orderProvider.groupedOrders;
+        final myOrders = orderProvider.myOrders;
 
         return ListView.separated(
           padding: EdgeInsets.symmetric(
             horizontal: context.getWidth(0.05),
             vertical: context.getHeight(0.02),
           ),
-          itemCount: groupOrder.length,
-          separatorBuilder: (context, index) => const Divider(height: 32),
+          itemCount: myOrders.length,
+          separatorBuilder: (context, index) => const SizedBox(height: 16),
           itemBuilder: (context, index) {
-            final orderId = groupOrder.keys.elementAt(index);
-            final orderItems = groupOrder[orderId]!;
+            final order = myOrders[index];
 
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ...orderItems.map((order) => Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: secondaryColor,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: containerBorderColor),
-                        ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: Image.asset(
-                                order.image,
-                                width: context.getWidth(0.20),
-                                height: context.getHeight(0.10),
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    order.name,
-                                    style: const TextStyle(
-                                      fontSize: fontSize14,
-                                      fontWeight: fontWeightBold,
-                                      color: primaryTextColor,
-                                    ),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    "${Localization.of().sizeText}${order.size}",
-                                    style: const TextStyle(
-                                      fontSize: fontSize12,
-                                      color: secondaryTextColor,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    "${Localization.of().quantityText} ${order.quantity}",
-                                    style: const TextStyle(
-                                      fontSize: fontSize12,
-                                      color: secondaryTextColor,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    "₹ ${currencyFormat.format(order.price)}",
-                                    style: const TextStyle(
-                                      fontSize: fontSize14,
-                                      fontWeight: fontWeightBold,
-                                      color: primaryTextColor,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    )),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: Column(
+            return GestureDetector(
+              onTap: () {
+                locator<NavigationUtils>().push(routeOrderStatus, arguments: {
+                  paramOrderId: order.orderId?.toString(),
+                  paramOrderStatus: order.status,
+                });
+              },
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: secondaryColor,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: containerBorderColor),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            Localization.of().shippingText,
-                            style: const TextStyle(
-                              fontSize: fontSize14,
-                              color: secondaryTextColor,
-                            ),
-                          ),
-                          Text(
-                            "₹ ${currencyFormat.format(orderItems.first.shippingFee)}",
-                            style: const TextStyle(
-                              fontSize: fontSize14,
-                              color: secondaryTextColor,
-                            ),
-                          ),
-                        ],
+                      Text(
+                        "Order #${order.orderId ?? 'N/A'}",
+                        style: const TextStyle(
+                          fontSize: fontSize16,
+                          fontWeight: fontWeightBold,
+                          color: primaryTextColor,
+                        ),
                       ),
-                      const Divider(height: 16),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            Localization.of().orderTotalText,
-                            style: const TextStyle(
-                              fontSize: fontSize16,
-                              fontWeight: fontWeightBold,
-                              color: primaryTextColor,
-                            ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: (order.status?.toLowerCase() == 'deliverd' ||
+                                  order.status?.toLowerCase() == 'delivered')
+                              ? Colors.green.withOpacity(0.1)
+                              : primaryColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          order.status?.toUpperCase() ?? 'UNKNOWN',
+                          style: TextStyle(
+                            fontSize: fontSize12,
+                            fontWeight: fontWeightBold,
+                            color: (order.status?.toLowerCase() == 'deliverd' ||
+                                    order.status?.toLowerCase() == 'delivered')
+                                ? Colors.green
+                                : primaryColor,
                           ),
-                          Text(
-                            "₹ ${currencyFormat.format(orderItems.first.totalAmount)}",
-                            style: const TextStyle(
-                              fontSize: fontSize16,
-                              fontWeight: fontWeightBold,
-                              color: primaryTextColor,
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                     ],
                   ),
-                ),
-              ],
-            );
+                  const SizedBox(height: 12),
+                  const Divider(height: 1),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.calendar_today_outlined,
+                        size: 16,
+                        color: secondaryTextColor,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        order.placedAt != null
+                            ? DateFormat('dd MMM yyyy, hh:mm a').format(
+                                DateTime.tryParse(order.placedAt!) ??
+                                    DateTime.now())
+                            : 'Date not available',
+                        style: const TextStyle(
+                          fontSize: fontSize14,
+                          color: secondaryTextColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.payments_outlined,
+                        size: 16,
+                        color: secondaryTextColor,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        "Total: ₹ ${currencyFormat.format(order.totalAmount ?? 0.0)}",
+                        style: const TextStyle(
+                          fontSize: fontSize14,
+                          fontWeight: fontWeightSemiBold,
+                          color: primaryTextColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              ),);
           },
         );
       },
@@ -280,9 +273,15 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       title: Localization.of().orderDetailText,
       centerTitle: true,
       leading: IconButton(
-        onPressed: locator<NavigationUtils>().pop,
+        onPressed: _handleToHomeScreen,
         icon: const Icon(Icons.arrow_back),
       ),
     );
+  }
+
+  void _handleToHomeScreen() {
+    context.read<OrderStatusProvider>().reset();
+    context.read<BottomNavProvider>().changeTab(0);
+    locator<NavigationUtils>().pushAndRemoveUntil(routeBase);
   }
 }

@@ -3,10 +3,16 @@ import 'package:seabasket/src/base/dependencyinjection/locator.dart';
 import 'package:seabasket/src/controllers/order_controller.dart';
 import 'package:seabasket/src/models/cart_item.dart';
 import 'package:seabasket/src/models/order.dart';
+import 'package:seabasket/src/models/response/res_my_order_model.dart';
+
+import '../base/utils/progress_dialog_utils.dart';
 
 class OrderProvider extends ChangeNotifier {
   List<Order> _orders = [];
   List<Order> get orders => _orders;
+
+  List<ResMyOrderModel> _myOrders = [];
+  List<ResMyOrderModel> get myOrders => _myOrders;
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
@@ -21,36 +27,25 @@ class OrderProvider extends ChangeNotifier {
   }
 
   Future<void> loadOrders() async {
-    _isLoading = true;
     _orders = await locator<OrderController>().getOrders();
     _isLoading = false;
     notifyListeners();
   }
 
-  Future<bool> saveOrderesFromCart(
-      List<CartItem> cartItems, double total, double shippingFee) async {
-    _isLoading = true;
-    final orderId = DateTime.now().microsecond.toString();
-    // final orders = cartItems
-    //     .map((item) => Order(
-    //           orderId: orderId,
-    //           productId: item.id,
-    //           name: item.name,
-    //           size: item.size,
-    //           price: item.price,
-    //           quantity: item.quantity,
-    //           image: item.image,
-    //           totalAmount: total,
-    //           shippingFee: shippingFee,
-    //         ))
-    //     .toList();
-
-    final success = await locator<OrderController>().saveOrders(orders);
-    if (success) await loadOrders();
-    _isLoading = false;
+  void setLoading(bool value) {
+    if(value){
+      ProgressDialogUtils.showProgressDialog();
+    }else{
+      ProgressDialogUtils.dismissProgressDialog();
+    }
     notifyListeners();
-    return success;
   }
+
+  void setMyOrders(List<ResMyOrderModel> newOrders) {
+    _myOrders = newOrders;
+    notifyListeners();
+  }
+
 
   Future<void> clearOrders() async {
     await locator<OrderController>().clearOrders();

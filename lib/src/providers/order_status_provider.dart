@@ -18,9 +18,19 @@ class OrderStatusProvider extends ChangeNotifier {
 
   bool get isDelivered => _currentStatus == OrderStatus.delivered;
 
-  Future<void> loadOrderStatus() async {
+  Future<void> loadOrderStatus(String orderId) async {
     _setLoading(true);
-    _currentStatus = await locator<OrderStatusController>().getOrderStatus();
+    final response = await locator<OrderStatusController>().getOrderStatus(orderId);
+    if (response != null && response.data != null && response.data!.orderStatus != null) {
+      final statusStr = response.data!.orderStatus!;
+      _currentStatus = OrderStatus.values.firstWhere(
+        (e) {
+          final val = e.name.toLowerCase();
+          final passed = statusStr.toLowerCase();
+          return val == passed || (val == 'delivered' && passed == 'deliverd');
+        }, 
+        orElse: () => OrderStatus.packing);
+    }
     _setLoading(false);
   }
 
@@ -47,6 +57,17 @@ class OrderStatusProvider extends ChangeNotifier {
 
   void _setLoading(bool value) {
     _isLoading = value;
+    notifyListeners();
+  }
+
+  void setStatusFromString(String statusStr) {
+    _currentStatus = OrderStatus.values.firstWhere(
+        (e) {
+          final val = e.name.toLowerCase();
+          final passed = statusStr.toLowerCase();
+          return val == passed || (val == 'delivered' && passed == 'deliverd');
+        }, 
+        orElse: () => OrderStatus.packing);
     notifyListeners();
   }
 }
