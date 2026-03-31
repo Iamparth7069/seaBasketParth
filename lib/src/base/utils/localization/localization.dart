@@ -77,6 +77,7 @@ abstract class Localization {
   String get emailLabel;
   String get emailHint;
   String get passwordLabel;
+  String get confirmPasswordLabel;
   String get passwordHint;
   String get msgEmailEmpty;
   String get msgEmailInvalid;
@@ -169,6 +170,7 @@ abstract class Localization {
   String get subTotalText;
   String get shippingFeeText;
   String get goToCheckoutText;
+  String get selectSizeFirstMessage;
 
   //checkout screen
   String get deliveryAddressText;
@@ -176,8 +178,9 @@ abstract class Localization {
   String get orderSummaryText;
   String get placeOrderText;
   String get checkoutText;
-
+  String get paymentSuccessText;
   String get contiunePaymentText;
+  String get unavailableItemMessage;
 
   //payment
   String get cardDetailsText;
@@ -196,8 +199,9 @@ abstract class Localization {
   String get invalidExpiryDateMessage;
   String get invalidMonthMessage;
   String get invalidDateMessage;
+  String get paymentFailedText;
 
-  // order detail screen
+  // order detail screen and Order history
   String get orderDetailText;
   String get emptyOrderMessage;
   String get emptyOrderSubMessage;
@@ -205,6 +209,9 @@ abstract class Localization {
   String get quantityText;
   String get shippingText;
   String get orderTotalText;
+  String get orderIdText;
+  String get inProgressText;
+  String get itemCountText;
 
   // order status screen
   String get trackOrderTitle;

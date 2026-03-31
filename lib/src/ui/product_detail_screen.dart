@@ -8,9 +8,7 @@ import 'package:seabasket/src/base/utils/dialog_utils.dart';
 import 'package:seabasket/src/base/utils/image_utils.dart';
 import 'package:seabasket/src/base/utils/localization/localization.dart';
 import 'package:seabasket/src/base/utils/navigation_utils.dart';
-import 'package:seabasket/src/base/utils/constants/dic_params.dart';
 import 'package:seabasket/src/base/utils/constants/navigation_route_constants.dart';
-import 'package:seabasket/src/base/utils/progress_dialog_utils.dart';
 import 'package:seabasket/src/controllers/cart_controller.dart';
 import 'package:seabasket/src/controllers/product_controller.dart';
 import 'package:seabasket/src/models/cart/cart_model.dart';
@@ -260,7 +258,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                           }
 
                           if (isAlreadyInCart) {
-                            // Pop back to BaseScreen, then switch to Cart tab (index 2)
                             locator<NavigationUtils>().pop();
                             context.read<BottomNavProvider>().changeTab(2);
                           } else {
@@ -276,48 +273,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     );
   }
 
-  // ── Buy Now ────────────────────────────────────────────────────────────────
-  Future<void> _handleBuyNow(
-    ProductModel product,
-    String? selectedSize,
-  ) async {
-    if (selectedSize == null || selectedSize.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select a size first'),
-          duration: Duration(seconds: 1),
-        ),
-      );
-      return;
-    }
-
-    final result = await locator<CartController>().addToCart(
-      ReqCartModel(
-        productId: product.id!,
-        size: selectedSize,
-        quantity: 1,
-      ),
-    );
-
-    if (!mounted) return;
-
-    if (result != null) {
-      final buyNowTempItem = CartModel(
-        productId: result.productId ?? product.id,
-        size: result.size ?? selectedSize,
-        quantity: result.quantity ?? 1,
-        cartItemId: result.cartItemId,
-        productName: product.name,
-        effectivePrice: product.discountedPrice ?? product.price ?? 0.0,
-        image: product.imageUrl,
-      );
-
-      context.read<CheckoutProvider>().setBuyNowItem(buyNowTempItem);
-      locator<NavigationUtils>().push(routeCheckout, arguments: {paramCategoryId: product.categoryId});
-    }
-  }
-
-  // ── Login Dialog ────────────────────────────────────────────────────────────
   void _showLoginDialog() {
     showAlertDialog(
       isCancelEnable: false,
@@ -359,23 +314,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   ) async {
     if (_isAddingToCart) return;
 
-    // Validate size is selected
-    if (selectedSize == null || selectedSize.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select a size first'),
-          duration: Duration(seconds: 1),
-        ),
-      );
-      return;
-    }
-
     setState(() => _isAddingToCart = true);
 
     final result = await locator<CartController>().addToCart(
       ReqCartModel(
         productId: product.id!,
-        size: selectedSize,
+        size: selectedSize ?? "",
         quantity: 1,
       ),
     );
@@ -406,5 +350,45 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     }
 
     setState(() => _isAddingToCart = false);
+  }
+
+  Future<void> _handleBuyNow(
+    ProductModel product,
+    String? selectedSize,
+  ) async {
+    if (selectedSize == null || selectedSize.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(Localization.of().selectSizeFirstMessage),
+          duration: const Duration(seconds: 1),
+        ),
+      );
+      return;
+    }
+
+    final result = await locator<CartController>().addToCart(
+      ReqCartModel(
+        productId: product.id!,
+        size: selectedSize,
+        quantity: 1,
+      ),
+    );
+
+    if (!mounted) return;
+
+    if (result != null) {
+      final buyNowTempItem = CartModel(
+        productId: result.productId ?? product.id,
+        size: result.size ?? selectedSize,
+        quantity: result.quantity ?? 1,
+        cartItemId: result.cartItemId,
+        productName: product.name,
+        effectivePrice: product.discountedPrice ?? product.price ?? 0.0,
+        image: product.imageUrl,
+      );
+
+      // context.read<CheckoutProvider>().setBuyNowItem(buyNowTempItem);
+      // locator<NavigationUtils>().push(routeCheckout, arguments: {paramCategoryId: product.categoryId});
+    }
   }
 }

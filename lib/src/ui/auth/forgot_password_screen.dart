@@ -102,6 +102,7 @@ class _ForgotPasswordScreeState extends State<ForgotPasswordScreen> {
 
   Widget _getEmailTextField() {
     return PrimaryTextField(
+      contentPadding: const EdgeInsets.only(left: 5),
       label: Localization.of().emailLabel,
       hint: Localization.of().emailHint,
       focusNode: _emailFocus,

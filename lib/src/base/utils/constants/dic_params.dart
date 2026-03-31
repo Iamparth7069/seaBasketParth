@@ -26,6 +26,7 @@ const String paramEmail = "email";
 
 const String paramisLoginScreen = "isLogin";
 const String paramProductId = "productId";
-const String paramCategoryId = "categoryId";
+
+//order params
 const String paramOrderId = "orderId";
 const String paramOrderStatus = "orderStatus";

@@ -22,13 +22,14 @@ enum ProductSortType {
 }
 
 enum OrderStatus {
-  packing("Packing", "2336 Jack Warren Rd, Delta Junction, Alaska 9..."),
-  picked("Picked", "2417 Tongass Ave #111, Ketchikan, Alaska 99901..."),
-  inTransit("In Transit", "16 Rr 2, Ketchikan, Alaska 99901, USA"),
-  delivered("Delivered", "925 S Chugach St #APT 10, Alaska 99645");
+  placed("placed", "Order Placed", "We have received your order"),
+  packing("packing", "Packing", "Your items are being prepared"),
+  inTransit("in transit", "In Transit", "Your order is on the way"),
+  delivered("delivered", "Delivered", "Order delivered successfully");
 
-  const OrderStatus(this.displayTitle, this.displaySubtitle);
+  const OrderStatus(this.value, this.displayTitle, this.displaySubtitle);
 
+  final String value;
   final String displayTitle;
   final String displaySubtitle;
 }

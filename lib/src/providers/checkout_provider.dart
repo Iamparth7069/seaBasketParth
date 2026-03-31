@@ -46,21 +46,6 @@ class CheckoutProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> placeOrder() async {
-    ProgressDialogUtils.showProgressDialog();
-    final success = await locator<CheckoutController>().placeOrder();
-    ProgressDialogUtils.dismissProgressDialog();
-    return success;
-  }
-
-  Future<String> processStripePayment(double amount) async {
-    ProgressDialogUtils.showProgressDialog();
-
-    final result = await locator<CheckoutController>().processStripePayment(amount);
-    ProgressDialogUtils.dismissProgressDialog();
-    return result;
-  }
-
   void setEditing(bool value) {
     _isEditing = value;
     notifyListeners();
@@ -68,40 +53,6 @@ class CheckoutProvider extends ChangeNotifier {
 
   void toggleEditing() {
     _isEditing = !_isEditing;
-    notifyListeners();
-  }
-
-
-
-  Future<bool> saveCard(
-      String cardNumber, String expiryDate, String securityCode) async {
-    ProgressDialogUtils.showProgressDialog();
-
-    final success = await locator<CheckoutController>()
-        .saveCard(cardNumber, expiryDate, securityCode);
-    if (success) {
-      _cardNumber = cardNumber;
-      _expiryDate = expiryDate;
-      _securityCode = securityCode;
-      notifyListeners();
-    }
-    ProgressDialogUtils.dismissProgressDialog();
-    return success;
-  }
-
-  Future<void> loadSavedCard() async {
-    final card = await locator<CheckoutController>().getSavedCard();
-    _cardNumber = card['cardNumber'] ?? "";
-    _expiryDate = card['expiryDate'] ?? "";
-    _securityCode = card['securityCode'] ?? "";
-    notifyListeners();
-  }
-
-  Future<void> clearCardDetails() async {
-    await locator<CheckoutController>().clearCard();
-    _cardNumber = "";
-    _expiryDate = "";
-    _securityCode = "";
     notifyListeners();
   }
 }

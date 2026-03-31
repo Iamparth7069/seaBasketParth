@@ -1,5 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
-import 'package:seabasket/src/models/payment_intent_model.dart';
+import 'package:seabasket/src/models/payment/payment_intent_model.dart';
 
 part 'res_payment_intent_model.g.dart';
 

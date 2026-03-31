@@ -10,7 +10,6 @@ import 'package:seabasket/src/models/response/res_cart_model.dart';
 import 'package:seabasket/src/models/response/res_update_cart_model.dart';
 
 class CartApiManager {
-
   Future<ResCartModel?> addToCart(ReqCartModel item) async {
     final response =
         await locator<ApiService>().post(apiAddCart, data: item.toJson());
@@ -35,8 +34,8 @@ class CartApiManager {
   }
 
   Future<ResCartModel?> getCartItemPatch(int cartItemId) async {
-    final response = await locator<ApiService>().patch(apiUpdateCart,
-        params: {"cart_item_id": cartItemId});
+    final response = await locator<ApiService>()
+        .patch(apiUpdateCart, params: {"cart_item_id": cartItemId});
 
     if (response != null) {
       return ResCartModel.fromJson(response.data);

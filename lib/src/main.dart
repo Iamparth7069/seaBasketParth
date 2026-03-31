@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:seabasket/src/base/utils/constants/navigation_route_constants.dart';
 import 'package:seabasket/src/base/utils/localization/localization.dart';
 import 'package:seabasket/src/base/utils/preference_utils.dart';
@@ -16,14 +17,14 @@ import 'package:seabasket/src/providers/theme_provier.dart';
 import 'package:seabasket/src/widgets/themewidgets/theme_data.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_stripe/flutter_stripe.dart';
 
 import 'base/dependencyinjection/locator.dart';
 import 'base/utils/navigation_utils.dart';
 
 void mainDelegate() async {
   WidgetsFlutterBinding.ensureInitialized();
-  Stripe.publishableKey = 'pk_test_51TCxjePFAVGhlGbEM8Egihh6hfupnUH4PPtlCLpVJuSpEikYgeTl6gnSQLcTBLUMQ659HkV2O5NuGJEzzgXOA2Fg00lppHhb7N';
+  Stripe.publishableKey =
+      'pk_test_51TCxjePFAVGhlGbEM8Egihh6hfupnUH4PPtlCLpVJuSpEikYgeTl6gnSQLcTBLUMQ659HkV2O5NuGJEzzgXOA2Fg00lppHhb7N';
   setupLocator();
   await init();
   await initializeDateFormatting();
@@ -50,9 +51,8 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => BottomNavProvider()),
         ChangeNotifierProvider(create: (_) => CartProvider()),
         ChangeNotifierProvider(create: (_) => CheckoutProvider()),
+        ChangeNotifierProvider(create: (_) => OrderProvider()),
         ChangeNotifierProvider(create: (_) => OrderStatusProvider()),
-        ChangeNotifierProvider(create: (_) => OrderProvider(),)
-        
       ],
       child: Consumer<ThemeProvider>(
         builder: (context, themeData, child) => MaterialApp(
@@ -76,7 +76,6 @@ class MyApp extends StatelessWidget {
             DefaultMaterialLocalizations.delegate,
             DefaultWidgetsLocalizations.delegate,
           ],
-
           supportedLocales: const [
             Locale('en', ''),
           ],

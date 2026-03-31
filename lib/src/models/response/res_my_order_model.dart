@@ -1,6 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
-
-import 'order_item_model.dart';
+import 'package:seabasket/src/models/order/order_item_model.dart';
 
 part 'res_my_order_model.g.dart';
 

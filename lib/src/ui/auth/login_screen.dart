@@ -175,6 +175,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Widget _getEmailTextField() {
     return PrimaryTextField(
+      contentPadding: const EdgeInsets.only(left: 5),
       label: Localization.of().emailLabel,
       hint: Localization.of().emailHint,
       focusNode: _emailFocus,
@@ -193,6 +194,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Widget _getPasswordTextField() {
     return PrimaryTextField(
+      contentPadding: const EdgeInsets.only(left: 5),
       isObscureText: true,
       label: Localization.of().passwordLabel,
       hint: Localization.of().passwordHint,

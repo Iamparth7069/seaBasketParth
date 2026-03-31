@@ -190,6 +190,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Widget _getUsernameTextField() {
     return PrimaryTextField(
+      contentPadding: const EdgeInsets.only(left: 5),
       label: Localization.of().userNameLabel,
       hint: Localization.of().userNameHint,
       focusNode: _userNameFocus,
@@ -205,6 +206,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Widget _getEmailTextField() {
     return PrimaryTextField(
+      contentPadding: const EdgeInsets.only(left: 5),
       label: Localization.of().emailLabel,
       hint: Localization.of().emailHint,
       focusNode: _emailFocus,
@@ -223,6 +225,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Widget _getPasswordTextField() {
     return PrimaryTextField(
+      contentPadding: const EdgeInsets.only(left: 5),
       isObscureText: true,
       label: Localization.of().passwordLabel,
       hint: Localization.of().passwordHint,
@@ -241,9 +244,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Widget _getPhoneNumberTextField() {
     return PrimaryTextField(
+      contentPadding: const EdgeInsets.only(left: 5),
       label: Localization.of().phoneNumberText,
       hint: Localization.of().phoneNumberHint,
-      contentPadding: const EdgeInsets.only(left: 4),
       controller: _phoneController,
       type: TextInputType.phone,
       textInputAction: TextInputAction.next,

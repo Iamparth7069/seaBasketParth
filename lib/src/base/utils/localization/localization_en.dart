@@ -102,6 +102,9 @@ class LocalizationEN implements Localization {
   String get passwordLabel => "Password";
 
   @override
+  String get confirmPasswordLabel => "Confirm Password";
+
+  @override
   String get msgEmailEmpty => "Email required";
 
   @override
@@ -310,7 +313,7 @@ class LocalizationEN implements Localization {
   String get profileUpdateMessage => "Profile updated successfully!";
   // cart screen
   @override
-  String get cartEmptyText => "Your Cart Is Empty!";
+  String get cartEmptyText => "Your Cart is Empty!";
 
   @override
   String get cartEmptySubText => "When you add products,they'll \n appear here";
@@ -431,4 +434,25 @@ class LocalizationEN implements Localization {
 
   @override
   String get selectRatingMessage => "Please Select rating";
+
+  @override
+  String get paymentSuccessText => "Payment Successful!";
+
+  @override
+  String get unavailableItemMessage => "This item is currently unavailable.";
+
+  @override
+  String get paymentFailedText => "Payment Failed!";
+
+  @override
+  String get orderIdText => "Order ID:";
+
+  @override
+  String get inProgressText => "In Progress";
+
+  @override
+  String get selectSizeFirstMessage => "Please select a size first.";
+
+  @override
+  String get itemCountText => "Items";
 }

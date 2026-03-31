@@ -14,7 +14,7 @@ class OrderProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setHistoryOrders(List<ResMyOrderModel> orders) {
+  void setOrderHistory(List<ResMyOrderModel> orders) {
     _historyOrders = orders;
     notifyListeners();
   }

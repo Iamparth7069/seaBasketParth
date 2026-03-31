@@ -133,6 +133,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
   Widget _getPasswordTextField() {
     return PrimaryTextField(
+      contentPadding: const EdgeInsets.only(left: 5),
       isObscureText: true,
       label: Localization.of().passwordLabel,
       hint: Localization.of().resetPasswordHint,
@@ -149,8 +150,9 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
   Widget _getConfirmPasswordTextField() {
     return PrimaryTextField(
+      contentPadding: const EdgeInsets.only(left: 5),
       isObscureText: true,
-      label: Localization.of().passwordLabel,
+      label: Localization.of().confirmPasswordLabel,
       hint: Localization.of().resetPasswordHint,
       focusNode: _confirmPasswordFocus,
       type: TextInputType.visiblePassword,

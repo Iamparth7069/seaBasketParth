@@ -27,7 +27,7 @@ class _AccountScreenState extends State<AccountScreen> {
       children: [
         _menuTile(
           icon: Icons.inventory_2_outlined,
-          title: "My orders",
+          title: Localization.of().orderDetailText,
           onTap: () {
             locator<NavigationUtils>().push(routeOrderDetail);
           },
@@ -38,7 +38,7 @@ class _AccountScreenState extends State<AccountScreen> {
         ),
         _menuTile(
             icon: Icons.person_outlined,
-            title: "My details",
+            title: Localization.of().myDetailsText,
             onTap: () {
               locator<NavigationUtils>().push(routeProfile);
             }),
@@ -97,13 +97,11 @@ class _AccountScreenState extends State<AccountScreen> {
         message: Localization.of().msgLogoutConfirm,
         okButtonTitle: Localization.of().yes,
         okButtonAction: () {
+          locator<NavigationUtils>().pop();
+          // context.read<OrderProvider>().clearOrders();
+          locator<AuthController>().logout(context);
           locator<NavigationUtils>().pushAndRemoveUntil(routeLogin);
-
-          // locator<NavigationUtils>().pop();
-          // // context.read<OrderProvider>().clearOrders();
-          // context.read<CheckoutProvider>().clearCardDetails();
-          // context.read<AuthController>().logout(context);
-          // context.read<BottomNavProvider>().changeTab(0);
+          context.read<BottomNavProvider>().changeTab(0);
         },
         isCancelEnable: true);
   }

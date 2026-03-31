@@ -14,10 +14,7 @@ import 'package:seabasket/src/providers/order_status_provider.dart';
 import 'package:seabasket/src/widgets/primary_button.dart';
 
 class OrderStatusScreen extends StatefulWidget {
-  final String? orderId;
-  final String? status;
-
-  const OrderStatusScreen({super.key, this.orderId, this.status});
+  const OrderStatusScreen({super.key});
 
   @override
   State<OrderStatusScreen> createState() => _OrderStatusScreenState();
@@ -28,11 +25,7 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (widget.status != null) {
-        context.read<OrderStatusProvider>().setStatusFromString(widget.status!);
-      } else if (widget.orderId != null) {
-        context.read<OrderStatusProvider>().loadOrderStatus(widget.orderId!);
-      }
+      context.read<OrderStatusProvider>().loadOrderStatus();
     });
   }
 
@@ -48,7 +41,7 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
           canPop: false,
           onPopInvokedWithResult: (didPop, result) {
             if (!didPop) {
-              locator<NavigationUtils>().pop();
+              _handleHomeScreen();
             }
           },
           child: SingleChildScrollView(
@@ -72,6 +65,7 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
                   final isCompleted =
                       status.index <= orderStatusProvider.currentStatus.index;
                   final isLast = status == OrderStatus.delivered;
+
                   return _buildStep(
                     title: status.displayTitle,
                     subtitle: status.displaySubtitle,
@@ -93,9 +87,7 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
             title: Localization.of().trackOrderTitle,
             centerTitle: true,
             leading: IconButton(
-              onPressed: () {
-                locator<NavigationUtils>().pop();
-              },
+              onPressed: _handleHomeScreen,
               icon: const Icon(Icons.arrow_back),
             ),
           ),
@@ -274,7 +266,4 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
     context.read<BottomNavProvider>().changeTab(0);
     locator<NavigationUtils>().pushAndRemoveUntil(routeBase);
   }
-
-
-
 }

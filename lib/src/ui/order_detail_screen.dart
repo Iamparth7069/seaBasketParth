@@ -13,6 +13,7 @@ import 'package:seabasket/src/base/utils/navigation_utils.dart';
 import 'package:seabasket/src/controllers/order_controller.dart';
 import 'package:seabasket/src/providers/order_provider.dart';
 import 'package:seabasket/src/providers/user_provider.dart';
+import 'package:seabasket/src/widgets/login_required_widget.dart';
 import '../providers/bottom_nav_provider.dart';
 import '../providers/order_status_provider.dart';
 
@@ -45,6 +46,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   Widget build(BuildContext context) {
     return Consumer2<OrderProvider, UserProvider>(
       builder: (context, orderProvider, userProvider, child) {
+        if (!userProvider.isLoggedIn) {
+          return const LoginRequiredWidget();
+        }
+
         if (orderProvider.myOrders.isEmpty) {
           return Center(
             child: Column(
@@ -107,7 +112,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          "Order Id #${order.orderId}",
+                          "${Localization.of().orderIdText} #${order.orderId}",
                           style: const TextStyle(
                             fontSize: fontSize16,
                             fontWeight: fontWeightBold,
@@ -119,22 +124,23 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                               horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(
                             color: (order.status?.toLowerCase() == 'deliverd' ||
-                                order.status?.toLowerCase() == 'delivered')
+                                    order.status?.toLowerCase() == 'delivered')
                                 ? Colors.green.withAlpha(25)
                                 : primaryColor.withAlpha(25),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
-                            order.status?.toUpperCase() ?? "In procsess",
+                            order.status?.toUpperCase() ??
+                                Localization.of().inProgressText,
                             style: TextStyle(
                               fontSize: fontSize12,
                               fontWeight: fontWeightBold,
                               color:
-                              (order.status?.toLowerCase() == 'deliverd' ||
-                                  order.status?.toLowerCase() ==
-                                      'delivered')
-                                  ? Colors.green
-                                  : primaryColor,
+                                  (order.status?.toLowerCase() == 'deliverd' ||
+                                          order.status?.toLowerCase() ==
+                                              'delivered')
+                                      ? Colors.green
+                                      : primaryColor,
                             ),
                           ),
                         ),
@@ -152,7 +158,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          "${order.orderId}",
+                          "${Localization.of().itemCountText}: ${order.itemCount}",
+                          //"${order.orderId}",
                           style: const TextStyle(
                             fontSize: fontSize14,
                             color: secondaryTextColor,

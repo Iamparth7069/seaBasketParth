@@ -11,6 +11,7 @@ import 'package:seabasket/src/base/utils/constants/navigation_route_constants.da
 import 'package:seabasket/src/base/utils/localization/localization.dart';
 import 'package:seabasket/src/base/utils/navigation_utils.dart';
 import 'package:seabasket/src/controllers/cart_controller.dart';
+import 'package:seabasket/src/controllers/checkout_controller.dart';
 import 'package:seabasket/src/providers/cart_provider.dart';
 import 'package:seabasket/src/providers/checkout_provider.dart';
 import 'package:seabasket/src/widgets/primary_button.dart';
@@ -29,17 +30,18 @@ class CheckoutScreen extends StatefulWidget {
 class _CheckoutScreenState extends State<CheckoutScreen> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _addressController;
-  final NumberFormat _fmt = NumberFormat.decimalPattern('en_in');
+  final NumberFormat _format = NumberFormat.decimalPattern('en_in');
 
   @override
   void initState() {
     super.initState();
     _addressController = TextEditingController();
-    
+
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final checkoutProvider = context.read<CheckoutProvider>();
 
-      final cartData = await locator<CartController>().getCartData(modify: true);
+      final cartData =
+          await locator<CartController>().getCartData(modify: true);
       if (cartData != null && mounted) {
         if (cartData.deliveryAddress != null &&
             cartData.deliveryAddress!.isNotEmpty) {
@@ -58,26 +60,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               .getCartItemPatch(buyNowCartItemId);
           if (updatedBuyNow != null && mounted) {
             checkoutProvider.setBuyNowItem(updatedBuyNow);
-            // Optionally set address if available in the buy-now response (if backend returns it, though it usually doesn't, we can skip)
           }
         }
       }
     });
   }
 
-  CheckoutProvider? _checkoutProvider;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _checkoutProvider ??= context.read<CheckoutProvider>();
-  }
-
   @override
   void dispose() {
     _addressController.dispose();
-    // Reset buy-now state when the user leaves checkout
-    _checkoutProvider?.clearBuyNow();
+    //  context.read<CheckoutProvider>().clearBuyNow();
     super.dispose();
   }
 
@@ -95,7 +87,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // ── Delivery Address ────────────────────────────────────────
                 Text(
                   Localization.of().deliveryAddressText,
                   style: const TextStyle(
@@ -109,8 +100,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 SizedBox(height: context.getHeight(0.03)),
                 const Divider(),
                 SizedBox(height: context.getHeight(0.02)),
-
-                // ── Order Summary ────────────────────────────────────────────
                 Text(
                   Localization.of().orderSummaryText,
                   style: const TextStyle(
@@ -120,15 +109,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   ),
                 ),
                 SizedBox(height: context.getHeight(0.02)),
-
-                // Show buy-now summary OR full cart summary
                 checkoutProvider.isBuyNow
                     ? _buyNowOrderSummary(checkoutProvider)
                     : _cartOrderSummary(cartProvider),
-
                 SizedBox(height: context.getHeight(0.03)),
-
-                // ── Continue Button ──────────────────────────────────────────
                 checkoutProvider.isLoading
                     ? const Center(child: CircularProgressIndicator())
                     : PrimaryButton(
@@ -155,7 +139,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-  // ── Address Section ─────────────────────────────────────────────────────────
   Widget _addressSection(CheckoutProvider checkoutProvider) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -177,7 +160,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           child: TextButton(
             onPressed: () async {
               if (checkoutProvider.isEditing) {
-                // User is saving the address
                 final newAddress = _addressController.text.trim();
                 if (newAddress.isNotEmpty) {
                   await locator<AuthController>().updateProfile(
@@ -203,7 +185,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-  // ── Buy Now Order Summary ───────────────────────────────────────────────────
   Widget _buyNowOrderSummary(CheckoutProvider checkoutProvider) {
     final item = checkoutProvider.buyNowItem;
     if (item == null) return const SizedBox.shrink();
@@ -217,7 +198,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Unavailability warning
           if (item.isAvailable == false) ...[
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -233,7 +213,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'This item is currently unavailable.',
+                      Localization.of().unavailableItemMessage,
                       style: TextStyle(
                         fontSize: fontSize12,
                         color: Colors.red.shade700,
@@ -246,8 +226,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             ),
             const SizedBox(height: 12),
           ],
-
-          // Product info card
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
@@ -256,7 +234,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             ),
             child: Row(
               children: [
-                // Product image
                 if (item.image != null && item.image!.isNotEmpty) ...[
                   ClipRRect(
                     borderRadius: BorderRadius.circular(8),
@@ -291,7 +268,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Size: ${item.size ?? ''}',
+                        '${Localization.of().sizeText} : ${item.size ?? ''}',
                         style: const TextStyle(
                           fontSize: fontSize12,
                           color: secondaryTextColor,
@@ -299,7 +276,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Qty: ${item.quantity ?? 1}',
+                        '${Localization.of().quantityText} : ${item.quantity ?? 1}',
                         style: const TextStyle(
                           fontSize: fontSize12,
                           color: secondaryTextColor,
@@ -309,7 +286,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   ),
                 ),
                 Text(
-                  '₹ ${_fmt.format(item.effectivePrice ?? 0)}',
+                  '₹ ${_format.format(item.effectivePrice ?? 0)}',
                   style: const TextStyle(
                     fontSize: fontSize14,
                     fontWeight: fontWeightBold,
@@ -322,17 +299,17 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           const SizedBox(height: 16),
           _summaryRow(
             Localization.of().subTotalText,
-            '₹ ${_fmt.format(checkoutProvider.buyNowSubtotal)}',
+            '₹ ${_format.format(checkoutProvider.buyNowSubtotal)}',
           ),
           SizedBox(height: context.getHeight(0.01)),
           _summaryRow(
             Localization.of().shippingFeeText,
-            '₹ ${_fmt.format(checkoutProvider.shippingFee)}',
+            '₹ ${_format.format(checkoutProvider.shippingFee)}',
           ),
           const Divider(height: 24),
           _summaryRow(
             Localization.of().totalText,
-            '₹ ${_fmt.format(checkoutProvider.buyNowTotal)}',
+            '₹ ${_format.format(checkoutProvider.buyNowTotal)}',
             isBold: true,
           ),
         ],
@@ -340,7 +317,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-  // ── Full Cart Order Summary ─────────────────────────────────────────────────
   Widget _cartOrderSummary(CartProvider cartProvider) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -352,17 +328,17 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         children: [
           _summaryRow(
             Localization.of().subTotalText,
-            '₹ ${_fmt.format(cartProvider.subtotal)}',
+            '₹ ${_format.format(cartProvider.subtotal)}',
           ),
           SizedBox(height: context.getHeight(0.01)),
           _summaryRow(
             Localization.of().shippingFeeText,
-            '₹ ${_fmt.format(cartProvider.shippingFee)}',
+            '₹ ${_format.format(cartProvider.shippingFee)}',
           ),
           const Divider(height: 24),
           _summaryRow(
             Localization.of().totalText,
-            '₹ ${_fmt.format(cartProvider.total)}',
+            '₹ ${_format.format(cartProvider.total)}',
             isBold: true,
           ),
         ],
@@ -370,7 +346,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-  // ── Summary Row ─────────────────────────────────────────────────────────────
   Widget _summaryRow(String label, String value, {bool isBold = false}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -395,41 +370,34 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-  // ── Continue ────────────────────────────────────────────────────────────────
   void _handleContinue() async {
     if (!_formKey.currentState!.validate()) return;
     FocusScope.of(context).unfocus();
-
     final checkoutProvider = context.read<CheckoutProvider>();
     final cartProvider = context.read<CartProvider>();
-
     final double totalAmount = checkoutProvider.isBuyNow
         ? checkoutProvider.buyNowTotal
         : cartProvider.total;
 
-    final result = await checkoutProvider.processStripePayment(totalAmount);
-
+    final result =
+        await locator<CheckoutController>().processStripePayment(totalAmount);
     if (!mounted) return;
-
     if (result == 'success') {
-      // Navigate to success screen or simply show snackbar and reset
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Payment Successful!'),
+        SnackBar(
+          content: Text(Localization.of().paymentSuccessText),
           backgroundColor: Colors.green,
         ),
       );
-      
-      checkoutProvider.clearBuyNow();
-      // Adjust to your actual success route (e.g. routeOrderSuccess)
+
+      // checkoutProvider.clearBuyNow();
       locator<NavigationUtils>().pushReplacement(routeOrderDetail);
     } else if (result == 'canceled') {
-      // User closed the payment sheet manually
       return;
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Payment Failed: $result'),
+          content: Text(Localization.of().paymentFailedText),
           backgroundColor: Colors.red,
           duration: const Duration(seconds: 4),
         ),

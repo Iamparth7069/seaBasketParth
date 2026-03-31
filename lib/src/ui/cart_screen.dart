@@ -9,13 +9,12 @@ import 'package:seabasket/src/base/utils/constants/image_constant.dart';
 import 'package:seabasket/src/base/utils/image_utils.dart';
 import 'package:seabasket/src/base/utils/localization/localization.dart';
 import 'package:seabasket/src/controllers/cart_controller.dart';
-import 'package:seabasket/src/models/cart_item.dart';
-import 'package:seabasket/src/models/request/req_update_cart_model.dart';
 import 'package:seabasket/src/providers/cart_provider.dart';
 import 'package:seabasket/src/base/dependencyinjection/locator.dart';
 import 'package:seabasket/src/base/utils/navigation_utils.dart';
 import 'package:seabasket/src/base/utils/constants/navigation_route_constants.dart';
 import 'package:seabasket/src/providers/user_provider.dart';
+import 'package:seabasket/src/widgets/login_required_widget.dart';
 import 'package:seabasket/src/widgets/primary_button.dart';
 
 class CartScreen extends StatefulWidget {
@@ -31,7 +30,8 @@ class _CartScreenState extends State<CartScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final cartData = await locator<CartController>().getCartData(modify: true);
+      final cartData =
+          await locator<CartController>().getCartData(modify: true);
       if (cartData != null) {
         context.read<CartProvider>().setCartItems(cartData.items);
       }
@@ -43,71 +43,8 @@ class _CartScreenState extends State<CartScreen> {
     return Consumer2<CartProvider, UserProvider>(
       builder: (context, cartProvider, userProvider, child) {
         if (!userProvider.isLoggedIn) {
-          return Padding(
-            padding: EdgeInsets.symmetric(
-                horizontal: context.getHeight(0.02),
-                vertical: context.getHeight(0.07)),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: const BoxDecoration(
-                    color: profileContainerColor,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.lock_outline,
-                    size: 48,
-                    color: primaryColor,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                Text(
-                  Localization.of().notLoggedIn,
-                  style: const TextStyle(
-                    fontSize: fontSize18,
-                    fontWeight: fontWeightSemiBold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  Localization.of().loginMessage,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: fontSize14,
-                    color: Colors.grey.shade600,
-                  ),
-                ),
-                const SizedBox(height: 28),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      locator<NavigationUtils>().push(routeLogin);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryColor,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    child: Text(
-                      Localization.of().loginText,
-                      style: const TextStyle(
-                        fontSize: fontSize16,
-                        fontWeight: fontWeightSemiBold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
+          return const LoginRequiredWidget();
         }
-
         if (cartProvider.cartItems.isEmpty) {
           return Center(
             child: Column(
@@ -170,63 +107,8 @@ class _CartScreenState extends State<CartScreen> {
     );
   }
 
-  // Tracks which cart item indices are currently loading (qty update in progress)
-  final Set<int> _loadingIndices = {};
-
-  Future<void> _updateQuantity(
-      bool modify,
-    CartProvider cartProvider,
-    int index,
-    String direction, // "increase" or "decrease"
-  ) async {
-    final item = cartProvider.cartItems[index];
-    if (item.cartItemId == null) return;
-
-    // Decrease at qty=1 → remove item
-    if (direction == "decrease" && (item.quantity ?? 1) <= 1) {
-      cartProvider.removeItem(index);
-      final data = await locator<CartController>()
-          .removeFromCart(item.cartItemId!,modify);
-      if (!mounted) return;
-      if (data != null) {
-        context.read<CartProvider>().setCartItems(data.items);
-      }
-      return;
-    }
-
-    // Optimistic UI update
-    setState(() => _loadingIndices.add(index));
-    cartProvider.updateItemQuantity(
-      index,
-      direction == "increase"
-          ? (item.quantity ?? 0) + 1
-          : (item.quantity ?? 1) - 1,
-    );
-
-    // API call
-    final data = await locator<CartController>().getCartData(
-      item: ReqUpdateCartModel(
-        cartItemId: item.cartItemId,
-        value: direction,
-      ),
-      modify: modify,
-    );
-
-    if (!mounted) return;
-
-    // Sync from server
-    if (data != null) {
-      context.read<CartProvider>().setCartItems(data.items);
-    }
-
-    setState(() => _loadingIndices.remove(index));
-  }
-
-
   Widget _cartItem(CartProvider cartProvider, int index) {
     final item = cartProvider.cartItems[index];
-    final isLoading = _loadingIndices.contains(index);
-
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -275,9 +157,11 @@ class _CartScreenState extends State<CartScreen> {
                           if (itemId != null) {
                             cartProvider.removeItem(index);
                             final data = await locator<CartController>()
-                                .removeFromCart(itemId,true);
+                                .removeFromCart(itemId, true);
                             if (mounted && data != null) {
-                              context.read<CartProvider>().setCartItems(data.items);
+                              context
+                                  .read<CartProvider>()
+                                  .setCartItems(data.items);
                             }
                           }
                         },
@@ -308,37 +192,28 @@ class _CartScreenState extends State<CartScreen> {
                       children: [
                         _quantityButton(
                           icon: Icons.remove,
-                          isLoading: isLoading,
-                          onTap: isLoading
-                              ? null
-                              : () => _updateQuantity(false,
-                                    cartProvider, index, "decrease"),
+                          onTap: () => locator<CartController>().updateQuantity(
+                            cartProvider: cartProvider,
+                            index: index,
+                            value: "decrease",
+                          ),
                         ),
                         const SizedBox(width: 16),
-                        isLoading
-                            ? const SizedBox(
-                                width: 14,
-                                height: 14,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: primaryColor,
-                                ),
-                              )
-                            : Text(
-                                '${item.quantity}',
-                                style: const TextStyle(
-                                  fontSize: fontSize14,
-                                  fontWeight: fontWeightMedium,
-                                ),
-                              ),
+                        Text(
+                          '${item.quantity}',
+                          style: const TextStyle(
+                            fontSize: fontSize14,
+                            fontWeight: fontWeightMedium,
+                          ),
+                        ),
                         const SizedBox(width: 16),
                         _quantityButton(
                           icon: Icons.add,
-                          isLoading: isLoading,
-                          onTap: isLoading
-                              ? null
-                              : () => _updateQuantity(false,
-                                    cartProvider, index, "increase"),
+                          onTap: () => locator<CartController>().updateQuantity(
+                            cartProvider: cartProvider,
+                            index: index,
+                            value: "increase",
+                          ),
                         ),
                       ],
                     ),
@@ -355,7 +230,6 @@ class _CartScreenState extends State<CartScreen> {
   Widget _quantityButton({
     required IconData icon,
     required VoidCallback? onTap,
-    bool isLoading = false,
   }) {
     return InkWell(
       onTap: onTap,
@@ -363,15 +237,9 @@ class _CartScreenState extends State<CartScreen> {
         padding: const EdgeInsets.all(4),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(4),
-          border: Border.all(
-            color: isLoading ? Colors.grey.shade300 : containerBorderColor,
-          ),
+          border: Border.all(color: containerBorderColor),
         ),
-        child: Icon(
-          icon,
-          size: 16,
-          color: isLoading ? Colors.grey.shade400 : primaryTextColor,
-        ),
+        child: Icon(icon, size: 16, color: primaryTextColor),
       ),
     );
   }

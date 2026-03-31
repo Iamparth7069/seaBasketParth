@@ -20,8 +20,6 @@ import 'package:seabasket/src/providers/product_provider.dart';
 import 'package:seabasket/src/ui//home/filter_bottomsheet.dart';
 import 'package:seabasket/src/widgets/primary_text_field.dart';
 
-import 'package:shimmer/shimmer.dart';
-
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
 
@@ -38,8 +36,6 @@ class _HomeScreenState extends State<HomeScreen> {
     ProductSortType.relevance,
   ];
 
-  bool _isLoading = true;
-
   @override
   void initState() {
     super.initState();
@@ -47,10 +43,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _loadHomeData() async {
-    setState(() {
-      _isLoading = true;
-    });
-    
+    ProgressDialogUtils.showProgressDialog();
     final provider = context.read<ProductProvider>();
     final results = await Future.wait([
       locator<CategoryController>().getAllCategories(),
@@ -63,25 +56,19 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     ]);
 
+    ProgressDialogUtils.dismissProgressDialog();
+
     if (!mounted) return;
-    
     if (results[0] != null) {
       context.read<CategoryProvider>().setCategories(results[0] as dynamic);
     }
     if (results[1] != null) {
       context.read<ProductProvider>().setProducts(results[1] as dynamic);
     }
-
-    setState(() {
-      _isLoading = false;
-    });
   }
 
   Future<void> _fetchProducts() async {
-    setState(() {
-      _isLoading = true;
-    });
-    
+    ProgressDialogUtils.showProgressDialog();
     final provider = context.read<ProductProvider>();
     final result = await locator<ProductController>().getProducts(
       categoryId: provider.selectedCategoryId,
@@ -90,15 +77,9 @@ class _HomeScreenState extends State<HomeScreen> {
       minRating: provider.selectedRating,
       sort: _sortOptions[provider.selectedSortIndex],
     );
-    
+    ProgressDialogUtils.dismissProgressDialog();
     if (result != null && mounted) {
       context.read<ProductProvider>().setProducts(result);
-    }
-
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-      });
     }
   }
 
@@ -176,30 +157,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _getCategoryList() {
-    if (_isLoading) {
-      return Shimmer.fromColors(
-        baseColor: Colors.grey[300]!,
-        highlightColor: Colors.grey[100]!,
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: List.generate(5, (index) {
-              return Container(
-                margin: const EdgeInsets.only(left: 13),
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                width: 80,
-                height: 40,
-              );
-            }),
-          ),
-        ),
-      );
-    }
-
     return Consumer<CategoryProvider>(
       builder: (context, categoryProvider, child) {
         final categories = categoryProvider.categories;
@@ -244,53 +201,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _getProductGrid() {
-    if (_isLoading) {
-      return Shimmer.fromColors(
-        baseColor: Colors.grey[300]!,
-        highlightColor: Colors.grey[100]!,
-        child: GridView.builder(
-          padding: EdgeInsets.only(
-            left: context.getWidth(0.04),
-            right: context.getWidth(0.04),
-            bottom: 20,
-          ),
-          itemCount: 6,
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              mainAxisSpacing: 16,
-              crossAxisSpacing: 16,
-              childAspectRatio: 0.65),
-          itemBuilder: (context, index) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  color: Colors.white,
-                  height: 14,
-                  width: double.infinity,
-                ),
-                const SizedBox(height: 6),
-                Container(
-                  color: Colors.white,
-                  height: 12,
-                  width: context.getWidth(0.2),
-                ),
-              ],
-            );
-          },
-        ),
-      );
-    }
-
     return Consumer<ProductProvider>(
       builder: (context, productProvider, child) {
         final products = productProvider.products;
