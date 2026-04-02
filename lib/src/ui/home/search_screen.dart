@@ -20,6 +20,14 @@ class SearchScreen extends StatefulWidget {
 
 class _SearchScreenState extends State<SearchScreen> {
   final searchController = TextEditingController();
+  String _activeQuery = '';
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -41,6 +49,7 @@ class _SearchScreenState extends State<SearchScreen> {
         final provider = context.read<ProductProvider>();
         final query = value.trim();
 
+        _activeQuery = query;
         provider.setSearchQuery(query);
 
         if (query.isEmpty) {
@@ -53,6 +62,9 @@ class _SearchScreenState extends State<SearchScreen> {
 
         final result =
             await locator<ProductController>().getProducts(name: query);
+
+        // Discard result if the user has already typed something newer
+        if (_activeQuery != query) return;
 
         provider.setSearching(false);
 

@@ -34,6 +34,13 @@ class ProductController {
     Set<int>? discounts,
     ProductSortType? sort,
   }) async {
+
+    final isSearchQuery = name != null && name.trim().isNotEmpty;
+    if (isSearchQuery && !loadMore) {
+      _isLoading = false;
+      resetPage(); // sets _hasMore = true, _page = 1
+    }
+
     if (_isLoading || !_hasMore) return [];
     _isLoading = true;
 
