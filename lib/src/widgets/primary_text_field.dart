@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:seabasket/src/base/extensions/context_extension.dart';
-
 import '../base/utils/constants/color_constant.dart';
 import '../base/utils/constants/fontsize_constant.dart';
 
@@ -31,6 +30,7 @@ class PrimaryTextField extends StatefulWidget {
   final bool autoFocus;
   final Icon? prefixIcon;
   final Icon? suffixIcon;
+  final bool hideErrorText;
 
   const PrimaryTextField({
     Key? key,
@@ -59,6 +59,7 @@ class PrimaryTextField extends StatefulWidget {
     this.suffixIcon,
     this.onTapped,
     this.readOnly = false,
+    this.hideErrorText = false,
   }) : super(key: key);
 
   @override
@@ -134,12 +135,14 @@ class PrimaryTextFieldState extends State<PrimaryTextField> {
             hintStyle: TextStyle(
                 color: secondaryTextColor.withAlpha(100), fontSize: fontSize14),
             counter: const Offstage(),
-            contentPadding: widget.contentPadding ?? const EdgeInsets.all(0.0),
+            contentPadding: widget.contentPadding ?? EdgeInsets.zero,
             floatingLabelBehavior: FloatingLabelBehavior.auto,
-            errorStyle: const TextStyle(
-              color: Colors.red,
-              fontSize: fontSize14,
-            ),
+            errorStyle: widget.hideErrorText
+                ? const TextStyle(height: 0, fontSize: 0)
+                : const TextStyle(
+                    color: Colors.red,
+                    fontSize: fontSize14,
+                  ),
             errorMaxLines: 3,
             labelStyle:
                 const TextStyle(fontSize: fontSize14, color: Colors.grey),

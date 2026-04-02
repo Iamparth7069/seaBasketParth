@@ -32,7 +32,6 @@ class ApiService {
           onRequest: (options, handler) {
             options.headers.addAll({
               // Key  acsessToken
-              'X-Auth-Token': getString(prefkeyToken),
               'Authorization': 'Bearer ${getString(prefkeyToken)}'
             });
             if (kDebugMode) {

@@ -1,15 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:seabasket/src/models/cart/cart_data_model.dart';
 import 'package:seabasket/src/models/cart/cart_model.dart';
+import 'package:seabasket/src/models/cart/cart_summary_model.dart';
 
 class CartProvider extends ChangeNotifier {
   List<CartModel> _cartItems = [];
-
+  CartSummaryModel? _summary;
   List<CartModel> get cartItems => _cartItems;
 
-  final double shippingFee = 80.0;
+  double get subtotal => _summary?.subtotal ?? 0;
+  double get shippingFee => _summary?.shipping ?? 0;
+  double get total => _summary?.grandTotal ?? 0;
 
-  void setCartItems(List<CartModel> items) {
-    _cartItems = items;
+  void setCartItems(CartDataModel data) {
+    _cartItems = data.items;
+    _summary = data.summary;
     notifyListeners();
   }
 
@@ -38,11 +43,4 @@ class CartProvider extends ChangeNotifier {
       (item) => item.productId == productId && item.size == size,
     );
   }
-
-  double get subtotal => _cartItems.fold(
-        0,
-        (sum, item) => sum + (item.effectivePrice ?? 0) * (item.quantity ?? 0),
-      );
-
-  double get total => subtotal + shippingFee;
 }

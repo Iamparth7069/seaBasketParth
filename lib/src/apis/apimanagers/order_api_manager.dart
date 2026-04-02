@@ -1,11 +1,7 @@
-import 'dart:convert';
-
 import 'package:seabasket/src/apis/api_route_constant.dart';
 import 'package:seabasket/src/apis/api_service.dart';
 import 'package:seabasket/src/base/dependencyinjection/locator.dart';
-import 'package:seabasket/src/base/utils/constants/preference_key_constant.dart';
-import 'package:seabasket/src/base/utils/preference_utils.dart';
-import 'package:seabasket/src/models/order.dart';
+import 'package:seabasket/src/models/request/req_add_rating_model.dart';
 import 'package:seabasket/src/models/response/res_my_order_model.dart';
 
 class OrderApiManager {
@@ -25,5 +21,13 @@ class OrderApiManager {
       }
     }
     return null;
+  }
+
+  Future<bool> addRating(ReqAddRatingModel request) async {
+    final response = await locator<ApiService>().post(
+      apiPostRating,
+      data: request.toJson(),
+    );
+    return response != null;
   }
 }

@@ -2,7 +2,6 @@ const String prefkeyId = "prefkeyId";
 const String prefkeyToken = "prefkeyToken";
 const String prefkeyIsDarkMode = "prefkeyIsDarkMode";
 const String prefkeyIsLogin = "prefkeyIsLogin";
-const String prefkeyIsOtpVerified = "is_otp_verified";
 
 //user Data store
 const String prefkeyUserId = "prefkeyUserId";
@@ -11,6 +10,7 @@ const String prefkeyUserPassword = "prefkeyUserPassword";
 const String prefkeyUserName = "prefkeyUserName";
 const String prefkeyUserPhoneNumber = "prefkeyUserPhoneNumber";
 const String prefkeyUserAddress = "prefkeyUserAddress";
+const String prefkeyIsOtpVerified = "prefkeyIsOtpVerified";
 
 //payment:
 const String prefkeyCardNumber = "card_number";

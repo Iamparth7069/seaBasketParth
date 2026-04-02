@@ -42,7 +42,7 @@ class AuthApiManager {
     return ResLoginModel.fromJson(response!.data);
   }
 
-  Future<ResBaseModel?> resetPasswordPAicall(
+  Future<ResBaseModel?> resetPasswordApiCall(
       ReqResetPasswordModel request) async {
     final response = await locator<ApiService>()
         .patch(apiResetPassword, data: request.toJson());

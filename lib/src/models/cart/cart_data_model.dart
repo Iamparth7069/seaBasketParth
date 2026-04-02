@@ -7,12 +7,9 @@ part 'cart_data_model.g.dart';
 @JsonSerializable()
 class CartDataModel {
   final String status;
-
   @JsonKey(name: 'delivery_address')
   final String? deliveryAddress;
-
   final List<CartModel> items;
-
   final CartSummaryModel? summary;
   CartDataModel({
     required this.status,

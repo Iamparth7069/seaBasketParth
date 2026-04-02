@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:seabasket/src/base/dependencyinjection/locator.dart';
-import 'package:seabasket/src/base/utils/enum_utils.dart';
-import 'package:seabasket/src/controllers/product_controller.dart';
-import 'package:seabasket/src/models/category/category_model.dart';
-import 'package:seabasket/src/models/product.dart';
 import 'package:seabasket/src/models/product/product_model.dart';
 import 'package:seabasket/src/models/response/res_product_detail_model.dart';
 
 class ProductProvider extends ChangeNotifier {
+  bool hasMore = true;
   List<ProductModel> _products = [];
+  bool isSearching = false;
   List<ProductModel> get products => _products;
 
   ResProductDetailModel? _selectedProduct;
@@ -47,8 +44,38 @@ class ProductProvider extends ChangeNotifier {
   Set<int> _tempDiscounts = {};
   Set<int> get tempDiscounts => _tempDiscounts;
 
-  void setProducts(List<ProductModel> products) {
-    _products = products;
+  bool _isAddingToCart = false;
+  bool get isAddingToCart => _isAddingToCart;
+
+  bool _isLoading = false;
+  bool get isLoading => _isLoading;
+
+  void setLoading(bool value) {
+    _isLoading = value;
+    notifyListeners();
+  }
+
+  void setSearching(bool value) {
+    isSearching = value;
+    notifyListeners();
+  }
+
+  void setProducts(List<ProductModel> products, {bool append = false}) {
+    if (append) {
+      _products.addAll(products);
+    } else {
+      _products = products;
+    }
+    notifyListeners();
+  }
+
+  void updateHasMore(bool value) {
+    hasMore = value;
+    notifyListeners();
+  }
+
+  void clearProducts() {
+    _products.clear();
     notifyListeners();
   }
 
@@ -97,6 +124,11 @@ class ProductProvider extends ChangeNotifier {
 
   void selectRating(double? rating) {
     _tempRating = _tempRating == rating ? null : rating;
+    notifyListeners();
+  }
+
+  void setAddingToCart(bool value) {
+    _isAddingToCart = value;
     notifyListeners();
   }
 

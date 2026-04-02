@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:seabasket/src/base/dependencyinjection/locator.dart';
 import 'package:seabasket/src/base/utils/navigation_utils.dart';
 import 'package:intl/intl.dart';
+import 'package:seabasket/src/ui/order_history.dart';
 
 import 'localization_en.dart';
 
@@ -90,11 +91,12 @@ abstract class Localization {
   String get msgNotAccount;
   String get joinAccount;
   String get loginText;
+  String get loginTextSpanText;
   String get registerMessage;
   String get registerTermMessage;
   String get cookieUse;
   String get and;
-  String get msgAlredyAccount;
+  String get msgAlreadyAccount;
   String get createAccountText;
   String get msgInvalidRegister;
   String get forgotPasswordTitle;
@@ -110,16 +112,25 @@ abstract class Localization {
   String get tryLater;
   String get resetPasswordTitle;
   String get resetPasswordSubTitle;
-  String get resetPasswordHint;
   String get passwordChangedText;
   String get passwordChangedSubText;
   String get invalidOtp;
   String get otpMessage;
   String get newOtpText;
   String get skipText;
+  String get registerSuccessful;
+  String get otpRequiredMessage;
+
+  // base screen
+  String get homeText;
+  String get accountText;
+  String get savedText;
+  String get noProductMessage;
 
 //Home screen
+
   String get discoverText;
+  String get searchHintText;
   String get searchText;
   String get noProductFoundText;
 
@@ -147,6 +158,9 @@ abstract class Localization {
   String get goToCartText;
   String get loginAlertMessage;
 
+//account screen
+  String get myOrdersText;
+
 // profile screen
   String get fullNameText;
   String get msgPhoneNumberEmpty;
@@ -170,6 +184,13 @@ abstract class Localization {
   String get subTotalText;
   String get shippingFeeText;
   String get goToCheckoutText;
+  String get cartText;
+  String get savedItemText;
+  String get yourDetailsText;
+  String get msgUpdateProfileFailed;
+
+  // cart
+  String get myCartText;
   String get selectSizeFirstMessage;
 
   //checkout screen
@@ -221,4 +242,11 @@ abstract class Localization {
   String get giveRatingMessage;
   String get gotoHomeText;
   String get selectRatingMessage;
+  String get ratingSubmittedMessage;
+  String get ratingFailedMessage;
+  String get orderHistoryTitle;
+  String get giveRatingText;
+
+  // strip payment
+  String get serverFailError;
 }

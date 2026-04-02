@@ -8,6 +8,7 @@ import 'package:seabasket/src/base/utils/constants/navigation_route_constants.da
 import 'package:seabasket/src/base/utils/dialog_utils.dart';
 import 'package:seabasket/src/base/utils/localization/localization.dart';
 import 'package:seabasket/src/base/utils/navigation_utils.dart';
+import 'package:seabasket/src/base/utils/progress_dialog_utils.dart';
 import 'package:seabasket/src/controllers/auth/auth_controller.dart';
 import 'package:seabasket/src/widgets/primary_button.dart';
 import 'package:seabasket/src/widgets/primary_text_field.dart';
@@ -38,18 +39,15 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
   Future<void> _handleResetPassword() async {
     if (!_formKey.currentState!.validate()) return;
+    // if (ProgressDialogUtils.isLoading) return;
     final password = _passwordController.text;
     final confirmPassword = _confirmPasswordController.text;
-
     if (password != confirmPassword) {
       showAlertDialog(message: Localization.of().msgPasswordNotMatch);
       return;
     }
-    ProgressDialogUtils.showProgressDialog();
     final success =
         await locator<AuthController>().resetPassword(context, password);
-    ProgressDialogUtils.showProgressDialog();
-
     if (success && mounted) {
       _showSuccessDialog();
     }
@@ -58,7 +56,6 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   @override
   void initState() {
     super.initState();
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       FocusScope.of(context).unfocus();
     });
@@ -113,22 +110,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
           ),
         ),
       ],
-    ).authContainerScaffold(
-      context: context,
-      appBar: AppBar(
-        leading: Padding(
-          padding: EdgeInsets.only(top: context.getWidth(0.05)),
-          child: IconButton(
-            icon: const Icon(Icons.arrow_back, color: primaryTextColor),
-            onPressed: () {
-              locator<NavigationUtils>().pop();
-            },
-          ),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
-    );
+    ).authContainerScaffold(context: context, showBackButton: true);
   }
 
   Widget _getPasswordTextField() {
@@ -136,7 +118,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       contentPadding: const EdgeInsets.only(left: 5),
       isObscureText: true,
       label: Localization.of().passwordLabel,
-      hint: Localization.of().resetPasswordHint,
+      hint: "*****",
       focusNode: _passwordFocus,
       type: TextInputType.visiblePassword,
       textInputAction: TextInputAction.next,
@@ -153,7 +135,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       contentPadding: const EdgeInsets.only(left: 5),
       isObscureText: true,
       label: Localization.of().confirmPasswordLabel,
-      hint: Localization.of().resetPasswordHint,
+      hint: "*****",
       focusNode: _confirmPasswordFocus,
       type: TextInputType.visiblePassword,
       textInputAction: TextInputAction.done,
@@ -175,49 +157,53 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   }
 
   void _showSuccessDialog() {
-    showAlertDialog(
-      isCancelEnable: false,
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Icons.check_circle_outline,
-              color: successColor,
-              size: 80,
+    showDialog(
+        context: context,
+        builder: (context) {
+          return Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.check_circle_outline,
+                  color: successColor,
+                  size: 80,
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  Localization.of().passwordChangedText,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: fontSize24,
+                    fontWeight: FontWeight.bold,
+                    color: primaryTextColor,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  Localization.of().passwordChangedSubText,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: fontSize14,
+                    color: secondaryTextColor,
+                  ),
+                ),
+                const SizedBox(height: 32),
+                PrimaryButton(
+                  buttonText: Localization.of().loginText,
+                  buttonColor: primaryButtonColor,
+                  backgroundColor: primaryButtonColor,
+                  textColor: secondaryColor,
+                  onButtonClick: () {
+                    locator<NavigationUtils>().pushAndRemoveUntil(routeLogin);
+                  },
+                ),
+              ],
             ),
-            const SizedBox(height: 24),
-            Text(
-              Localization.of().passwordChangedText,
-              style: const TextStyle(
-                fontSize: fontSize24,
-                fontWeight: FontWeight.bold,
-                color: primaryTextColor,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              Localization.of().passwordChangedSubText,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: fontSize14,
-                color: secondaryTextColor,
-              ),
-            ),
-            const SizedBox(height: 32),
-            PrimaryButton(
-              buttonText: Localization.of().loginText,
-              buttonColor: primaryButtonColor,
-              backgroundColor: primaryButtonColor,
-              textColor: secondaryColor,
-              onButtonClick: () {
-                locator<NavigationUtils>().pushAndRemoveUntil(routeLogin);
-              },
-            ),
-          ],
-        ),
-      ),
-    );
+          ).dialogContainer();
+        });
   }
 }

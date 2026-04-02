@@ -17,7 +17,6 @@ import 'package:seabasket/src/models/request/req_cart_model.dart';
 import 'package:seabasket/src/models/response/res_product_detail_model.dart';
 import 'package:seabasket/src/providers/bottom_nav_provider.dart';
 import 'package:seabasket/src/providers/cart_provider.dart';
-import 'package:seabasket/src/providers/checkout_provider.dart';
 import 'package:seabasket/src/providers/product_provider.dart';
 import 'package:seabasket/src/providers/user_provider.dart';
 import 'package:seabasket/src/widgets/primary_button.dart';
@@ -31,8 +30,6 @@ class ProductDetailScreen extends StatefulWidget {
 
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
   int selectedSizeIndex = 0;
-  bool _isAddingToCart = false;
-
   @override
   void initState() {
     super.initState();
@@ -92,6 +89,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       fontWeight: fontWeightSemiBold,
                     ),
                   ),
+                  const SizedBox(
+                    height: 10,
+                  )
                 ],
               ),
             ),
@@ -211,62 +211,28 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           final isAlreadyInCart =
               cartProvider.isInCart(product.id, selectedSize);
 
-          return Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () async {
+          return PrimaryButton(
+            buttonText: isAlreadyInCart
+                ? Localization.of().goToCartText
+                : Localization.of().addToCartText,
+            buttonColor: primaryButtonColor,
+            backgroundColor: primaryButtonColor,
+            textColor: secondaryColor,
+            leadingIcon: Icons.shopping_bag_outlined,
+            onButtonClick: productProvider.isAddingToCart
+                ? null
+                : () async {
                     if (!userProvider.isLoggedIn) {
                       _showLoginDialog();
                       return;
                     }
-                    await _handleBuyNow(product, selectedSize);
+                    if (isAlreadyInCart) {
+                      locator<NavigationUtils>().pop();
+                      context.read<BottomNavProvider>().changeTab(2);
+                    } else {
+                      await _handleAddToCart(product, selectedSize);
+                    }
                   },
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    side: const BorderSide(color: primaryButtonColor),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  child: Text(
-                    Localization.of().buyNowText,
-                    style: const TextStyle(
-                      fontSize: fontSize16,
-                      fontWeight: fontWeightMedium,
-                      color: primaryButtonColor,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: PrimaryButton(
-                  buttonText: isAlreadyInCart
-                      ? Localization.of().goToCartText
-                      : Localization.of().addToCartText,
-                  buttonColor: primaryButtonColor,
-                  backgroundColor: primaryButtonColor,
-                  textColor: secondaryColor,
-                  leadingIcon: Icons.shopping_bag_outlined,
-                  onButtonClick: _isAddingToCart
-                      ? null
-                      : () async {
-                          if (!userProvider.isLoggedIn) {
-                            _showLoginDialog();
-                            return;
-                          }
-
-                          if (isAlreadyInCart) {
-                            locator<NavigationUtils>().pop();
-                            context.read<BottomNavProvider>().changeTab(2);
-                          } else {
-                            await _handleAddToCart(product, selectedSize);
-                          }
-                        },
-                ),
-              ),
-            ],
           );
         },
       ),
@@ -275,7 +241,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
   void _showLoginDialog() {
     showAlertDialog(
-      isCancelEnable: false,
+      isCancelEnable: true,
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -312,10 +278,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     ProductModel product,
     String? selectedSize,
   ) async {
-    if (_isAddingToCart) return;
-
-    setState(() => _isAddingToCart = true);
-
+    final productProvider = context.read<ProductProvider>();
+    if (productProvider.isAddingToCart) return;
+    productProvider.setAddingToCart(true);
     final result = await locator<CartController>().addToCart(
       ReqCartModel(
         productId: product.id!,
@@ -348,47 +313,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         ),
       );
     }
-
-    setState(() => _isAddingToCart = false);
-  }
-
-  Future<void> _handleBuyNow(
-    ProductModel product,
-    String? selectedSize,
-  ) async {
-    if (selectedSize == null || selectedSize.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(Localization.of().selectSizeFirstMessage),
-          duration: const Duration(seconds: 1),
-        ),
-      );
-      return;
-    }
-
-    final result = await locator<CartController>().addToCart(
-      ReqCartModel(
-        productId: product.id!,
-        size: selectedSize,
-        quantity: 1,
-      ),
-    );
-
-    if (!mounted) return;
-
-    if (result != null) {
-      final buyNowTempItem = CartModel(
-        productId: result.productId ?? product.id,
-        size: result.size ?? selectedSize,
-        quantity: result.quantity ?? 1,
-        cartItemId: result.cartItemId,
-        productName: product.name,
-        effectivePrice: product.discountedPrice ?? product.price ?? 0.0,
-        image: product.imageUrl,
-      );
-
-      // context.read<CheckoutProvider>().setBuyNowItem(buyNowTempItem);
-      // locator<NavigationUtils>().push(routeCheckout, arguments: {paramCategoryId: product.categoryId});
-    }
+    productProvider.setAddingToCart(false);
   }
 }

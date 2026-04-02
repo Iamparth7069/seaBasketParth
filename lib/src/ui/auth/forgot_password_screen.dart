@@ -9,6 +9,7 @@ import 'package:seabasket/src/base/utils/constants/fontsize_constant.dart';
 import 'package:seabasket/src/base/utils/constants/navigation_route_constants.dart';
 import 'package:seabasket/src/base/utils/localization/localization.dart';
 import 'package:seabasket/src/base/utils/navigation_utils.dart';
+import 'package:seabasket/src/base/utils/progress_dialog_utils.dart';
 import 'package:seabasket/src/controllers/auth/auth_controller.dart';
 import 'package:seabasket/src/widgets/primary_button.dart';
 import 'package:seabasket/src/widgets/primary_text_field.dart';
@@ -19,10 +20,10 @@ class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({Key? key}) : super(key: key);
 
   @override
-  State<ForgotPasswordScreen> createState() => _ForgotPasswordScreeState();
+  State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
 }
 
-class _ForgotPasswordScreeState extends State<ForgotPasswordScreen> {
+class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _emailFocus = FocusNode();
@@ -30,14 +31,11 @@ class _ForgotPasswordScreeState extends State<ForgotPasswordScreen> {
   void _handleSendCode() async {
     if (!_formKey.currentState!.validate()) return;
     final enteredEmail = _emailController.text.trim();
-    ProgressDialogUtils.showProgressDialog();
     final success =
         await locator<AuthController>().forgotPassword(context, enteredEmail);
-    ProgressDialogUtils.dismissProgressDialog();
-
-    if (success && mounted) {
+    if (success) {
       locator<NavigationUtils>().push(routeOtpVerify,
-          arguments: {paramEmail: enteredEmail, paramisLoginScreen: false});
+          arguments: {paramEmail: enteredEmail, paramIsLogin: false});
     }
   }
 
@@ -83,21 +81,7 @@ class _ForgotPasswordScreeState extends State<ForgotPasswordScreen> {
           ],
         ),
       ),
-    ).authContainerScaffold(
-        context: context,
-        appBar: AppBar(
-          leading: Padding(
-            padding: EdgeInsets.only(top: context.getWidth(0.05)),
-            child: IconButton(
-              icon: const Icon(Icons.arrow_back, color: primaryTextColor),
-              onPressed: () {
-                locator<NavigationUtils>().pop();
-              },
-            ),
-          ),
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-        ));
+    ).authContainerScaffold(context: context, showBackButton: true);
   }
 
   Widget _getEmailTextField() {

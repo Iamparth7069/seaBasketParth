@@ -19,7 +19,7 @@ const Color successColor = Color(0xFF34C759);
 const Color errorColor = Color(0xFFFF3B30);
 
 //container
-const Color containerBorderColor = Color(0xffE6E6E6);
+const Color containerBorderColor = Color(0xff808080);
 const Color primaryContainerColor = Colors.transparent;
 const Color secondaryContainerColor = Color(0xff1A1A1A);
 const Color profileContainerColor = Color(0xffE6E6E6);
@@ -28,6 +28,8 @@ const Color profileContainerColor = Color(0xffE6E6E6);
 const Color secondaryIconColor = Color(0xff808080);
 const Color favouriteIconColor = Color(0xffED1010);
 const Color deleteIconColor = Color(0xffED1010);
+const Color fillRatingIconColor = Color(0xffFFA928);
+const Color ratingIconColor = Color(0xffBDBDBD);
 
 //divider color
 const Color secondaryDividerColor = Color(0xffE6E6E6);

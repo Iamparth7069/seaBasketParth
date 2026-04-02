@@ -56,9 +56,9 @@ class _AccountScreenState extends State<AccountScreen> {
                       Icons.logout,
                       color: logoutButtonColor,
                     ),
-                    title: const Text(
-                      "Logout",
-                      style: TextStyle(
+                    title: Text(
+                      Localization.of().logout,
+                      style: const TextStyle(
                         color: logoutButtonColor,
                         fontSize: fontSize16,
                         fontWeight: fontWeightMedium,
@@ -100,8 +100,8 @@ class _AccountScreenState extends State<AccountScreen> {
           locator<NavigationUtils>().pop();
           // context.read<OrderProvider>().clearOrders();
           locator<AuthController>().logout(context);
-          locator<NavigationUtils>().pushAndRemoveUntil(routeLogin);
           context.read<BottomNavProvider>().changeTab(0);
+          locator<NavigationUtils>().pushAndRemoveUntil(routeLogin);
         },
         isCancelEnable: true);
   }

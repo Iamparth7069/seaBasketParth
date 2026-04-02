@@ -1,21 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:seabasket/src/base/utils/constants/dic_params.dart';
 import 'package:seabasket/src/ui/auth/forgot_password_screen.dart';
-import 'package:seabasket/src/ui//home/base_screen.dart';
 import 'package:seabasket/src/ui/auth/login_screen.dart';
 import 'package:seabasket/src/ui/auth/otpverify_screen.dart';
 import 'package:seabasket/src/ui/auth/register_screen.dart';
 import 'package:seabasket/src/ui/auth/reset_password_screen.dart';
 import 'package:seabasket/src/ui/cart_screen.dart';
 import 'package:seabasket/src/ui/checkout_screen.dart';
+import 'package:seabasket/src/ui/home/base_screen.dart';
 import 'package:seabasket/src/ui/home/search_screen.dart';
 import 'package:seabasket/src/ui/order_detail_screen.dart';
 import 'package:seabasket/src/ui/order_history.dart';
-import 'package:seabasket/src/ui/order_status_screen.dart';
 import 'package:seabasket/src/ui/product_detail_screen.dart';
 import 'package:seabasket/src/ui/profile_screen.dart';
 import 'package:seabasket/src/ui/splash/splash_screen.dart';
 import 'constants/navigation_route_constants.dart';
+import 'constants/dic_params.dart';
 
 class NavigationUtils {
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
@@ -36,6 +35,7 @@ class NavigationUtils {
           settings: settings,
           builder: (_) => const SplashScreen(),
         );
+
       case routeLogin:
         return MaterialPageRoute(
           settings: settings,
@@ -56,7 +56,7 @@ class NavigationUtils {
           settings: settings,
           builder: (_) => OtpverifyScreen(
             email: args?[paramEmail],
-            isLoginScreen: args?[paramisLoginScreen],
+            isLoginScreen: args?[paramIsLogin],
           ),
         );
       case routeResetPassword:
@@ -107,11 +107,6 @@ class NavigationUtils {
           builder: (_) => OrderHistory(
             orderId: args?[paramOrderId],
           ),
-        );
-      case routeOrderStatus:
-        return MaterialPageRoute(
-          settings: settings,
-          builder: (_) => const OrderStatusScreen(),
         );
 
       default:

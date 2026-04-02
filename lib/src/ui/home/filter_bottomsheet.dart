@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:seabasket/src/base/dependencyinjection/locator.dart';
-import 'package:seabasket/src/base/extensions/string_extension.dart';
 import 'package:seabasket/src/base/utils/constants/color_constant.dart';
 import 'package:seabasket/src/base/utils/constants/fontsize_constant.dart';
 import 'package:seabasket/src/base/utils/enum_utils.dart';
 import 'package:seabasket/src/base/utils/localization/localization.dart';
 import 'package:seabasket/src/base/utils/navigation_utils.dart';
+import 'package:seabasket/src/controllers/product_controller.dart';
 import 'package:seabasket/src/providers/product_provider.dart';
 import 'package:seabasket/src/widgets/primary_button.dart';
 
@@ -21,13 +21,19 @@ class FilterBottomSheet extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Divider(
+              thickness: 5,
+              radius: BorderRadius.circular(40),
+              indent: 130,
+              endIndent: 130,
+              color: secondaryTextColor.withAlpha(50)),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
                 Localization.of().filterText,
                 style: const TextStyle(
-                  fontSize: fontSize26,
+                  fontSize: fontSize20,
                   color: primaryColor,
                   fontWeight: fontWeightBold,
                 ),
@@ -45,8 +51,10 @@ class FilterBottomSheet extends StatelessWidget {
             ],
           ),
           Divider(
-            thickness: 1.5,
-            color: Colors.grey[400],
+            thickness: 1,
+            indent: 5,
+            endIndent: 5,
+            color: secondaryTextColor.withAlpha(50),
           ),
           Text(
             Localization.of().sortByText,
@@ -82,7 +90,7 @@ class FilterBottomSheet extends StatelessWidget {
                           productProvider.selectSort(index);
                         },
                         child: Text(
-                          ProductSortType.values[index].displayValue,
+                          ProductSortType.values[index].value,
                           style: TextStyle(
                             fontSize: fontSize14,
                             color:
@@ -96,7 +104,13 @@ class FilterBottomSheet extends StatelessWidget {
               );
             },
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 10),
+          Divider(
+            thickness: 1,
+            indent: 5,
+            endIndent: 5,
+            color: secondaryTextColor.withAlpha(50),
+          ),
           Consumer<ProductProvider>(
             builder: (context, homeProvider, child) {
               return Row(
@@ -141,6 +155,12 @@ class FilterBottomSheet extends StatelessWidget {
                 },
               );
             },
+          ),
+          Divider(
+            thickness: 1,
+            indent: 5,
+            endIndent: 5,
+            color: secondaryTextColor.withAlpha(50),
           ),
           Text(
             Localization.of().ratingText,
@@ -217,7 +237,12 @@ class FilterBottomSheet extends StatelessWidget {
                   ));
             },
           ),
-          const SizedBox(height: 10),
+          Divider(
+            thickness: 1,
+            indent: 5,
+            endIndent: 5,
+            color: secondaryTextColor.withAlpha(50),
+          ),
           Text(
             Localization.of().discountText,
             style: const TextStyle(
@@ -280,6 +305,8 @@ class FilterBottomSheet extends StatelessWidget {
             buttonColor: primaryColor,
             onButtonClick: () {
               context.read<ProductProvider>().applyFilters();
+              locator<ProductController>().resetPage();
+              context.read<ProductProvider>().setProducts([]);
               locator<NavigationUtils>().pop();
             },
           ),

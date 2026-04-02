@@ -1,16 +1,10 @@
-import 'package:seabasket/src/apis/apimanagers/auth_api_manager.dart';
 import 'package:seabasket/src/apis/apimanagers/cart_api_manager.dart';
-import 'package:seabasket/src/apis/apimanagers/order_api_manager.dart';
 import 'package:seabasket/src/base/dependencyinjection/locator.dart';
 import 'package:seabasket/src/models/cart/cart_data_model.dart';
 import 'package:seabasket/src/models/cart/cart_model.dart';
-import 'package:seabasket/src/models/cart_item.dart';
 import 'package:seabasket/src/models/request/req_cart_model.dart';
 import 'package:seabasket/src/models/request/req_update_cart_model.dart';
-import 'package:seabasket/src/models/response/res_cart_model.dart';
-import 'package:seabasket/src/models/response/res_my_order_model.dart';
 import 'package:seabasket/src/providers/cart_provider.dart';
-
 import '../base/utils/progress_dialog_utils.dart';
 
 class CartController {
@@ -30,18 +24,10 @@ class CartController {
     ReqUpdateCartModel? item,
     bool modify = true,
   }) async {
-    print("modify Values is ${modify}");
-
-    if (modify) {
-      ProgressDialogUtils.showProgressDialog();
-    }
-
     final response = await locator<CartApiManager>().updateCartApiCall(item);
-
     if (modify) {
       ProgressDialogUtils.dismissProgressDialog();
     }
-
     if (response == null) return null;
     return response.data;
   }
@@ -66,7 +52,7 @@ class CartController {
     if (value == "decrease" && (item.quantity ?? 1) <= 1) {
       cartProvider.removeItem(index);
       final data = await removeFromCart(item.cartItemId!, true);
-      if (data != null) cartProvider.setCartItems(data.items);
+      if (data != null) cartProvider.setCartItems(data);
       return;
     }
 
@@ -83,19 +69,6 @@ class CartController {
       modify: false,
     );
 
-    if (data != null) cartProvider.setCartItems(data.items);
-  }
-
-  Future<CartModel?> getCartItemPatch(int cartItemId) async {
-    ProgressDialogUtils.showProgressDialog();
-    final response =
-        await locator<CartApiManager>().getCartItemPatch(cartItemId);
-    ProgressDialogUtils.dismissProgressDialog();
-
-    if (response == null) {
-      return null;
-    }
-
-    return response.data;
+    if (data != null) cartProvider.setCartItems(data);
   }
 }

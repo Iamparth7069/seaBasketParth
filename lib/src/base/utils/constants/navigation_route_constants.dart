@@ -1,10 +1,10 @@
 // Auth Screen Routes
-const String routeSplash = "routeSplash";
 const String routeLogin = "routeLogin";
 const String routeRegister = "routeRegister";
 const String routeForgotPassword = "routeForgotPassword";
 const String routeOtpVerify = "routeOtpVerify";
 const String routeResetPassword = "routeResetPassword";
+const String routeSplash = "routeSplash";
 
 // Base screen Route
 const String routeBase = "routeBase";

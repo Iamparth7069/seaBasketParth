@@ -1,6 +1,5 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:seabasket/src/base/dependencyinjection/locator.dart';
 import 'package:seabasket/src/base/extensions/context_extension.dart';
 import 'package:seabasket/src/base/extensions/string_extension.dart';
@@ -10,8 +9,8 @@ import 'package:seabasket/src/base/utils/constants/fontsize_constant.dart';
 import 'package:seabasket/src/base/utils/constants/navigation_route_constants.dart';
 import 'package:seabasket/src/base/utils/localization/localization.dart';
 import 'package:seabasket/src/base/utils/navigation_utils.dart';
+import 'package:seabasket/src/base/utils/progress_dialog_utils.dart';
 import 'package:seabasket/src/controllers/auth/auth_controller.dart';
-import 'package:seabasket/src/providers/user_provider.dart';
 import 'package:seabasket/src/widgets/primary_button.dart';
 
 import 'package:seabasket/src/widgets/primary_text_field.dart';
@@ -19,17 +18,18 @@ import '../../base/extensions/scaffold_extension.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
-
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+
   final _emailFocus = FocusNode();
   final _passwordFocus = FocusNode();
-  final _formKey = GlobalKey<FormState>();
+
   late TapGestureRecognizer _resetPasswordRecognizer;
   late TapGestureRecognizer _tapGestureRecognizer;
 
@@ -42,7 +42,7 @@ class _LoginScreenState extends State<LoginScreen> {
         .login(context, enteredEmail, enteredPassword);
     if (success != null) {
       locator<NavigationUtils>().push(routeOtpVerify,
-          arguments: {paramEmail: enteredEmail, paramisLoginScreen: true});
+          arguments: {paramEmail: enteredEmail, paramIsLogin: true});
     }
   }
 
@@ -51,7 +51,7 @@ class _LoginScreenState extends State<LoginScreen> {
     super.initState();
     _tapGestureRecognizer = TapGestureRecognizer()
       ..onTap = () {
-        locator<NavigationUtils>().push(routeRegister);
+        locator<NavigationUtils>().pushReplacement(routeRegister);
       };
     _resetPasswordRecognizer = TapGestureRecognizer()
       ..onTap = () {
@@ -80,68 +80,72 @@ class _LoginScreenState extends State<LoginScreen> {
               padding: EdgeInsets.symmetric(
                 horizontal: context.getWidth(0.07),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(height: context.getHeight(0.06)),
-                  Text(
-                    Localization.of().loginTitle,
-                    style: const TextStyle(
-                      fontSize: fontSize28,
-                      fontWeight: fontWeightSemiBold,
-                      color: primaryTextColor,
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      Localization.of().loginTitle,
+                      style: const TextStyle(
+                        fontSize: fontSize28,
+                        fontWeight: fontWeightSemiBold,
+                        color: primaryTextColor,
+                      ),
                     ),
-                  ),
-                  Text(
-                    Localization.of().loginSubtitle,
-                    style: const TextStyle(
-                      fontSize: fontSize16,
-                      color: secondaryTextColor,
+                    Text(
+                      Localization.of().loginSubtitle,
+                      style: const TextStyle(
+                        fontSize: fontSize16,
+                        color: secondaryTextColor,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 24),
-                  Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _getEmailTextField(),
-                        const SizedBox(
-                          height: 16,
+                    const SizedBox(height: 24),
+                    _getEmailTextField(),
+                    const SizedBox(height: 16),
+                    _getPasswordTextField(),
+                    const SizedBox(height: 16),
+                    RichText(
+                      text: TextSpan(
+                        text: Localization.of().forgotPassword,
+                        style: const TextStyle(
+                          color: secondaryTextColor,
+                          fontSize: fontSize14,
                         ),
-                        _getPasswordTextField(),
-                        const SizedBox(
-                          height: 16,
-                        ),
-                        RichText(
-                          text: TextSpan(
-                            text: Localization.of().forgotPassword,
-                            style: const TextStyle(
-                              color: secondaryTextColor,
-                              fontSize: fontSize14,
-                            ),
-                            children: [
-                              const TextSpan(text: " "),
-                              TextSpan(
-                                recognizer: _resetPasswordRecognizer,
-                                text: Localization.of().resetPassword,
-                                style: const TextStyle(
-                                  color: primaryTextColor,
-                                  fontWeight: fontWeightSemiBold,
-                                  decoration: TextDecoration.underline,
+                        children: [
+                          const TextSpan(text: " "),
+                          WidgetSpan(
+                            alignment: PlaceholderAlignment.middle,
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(4),
+                              splashColor: Colors.grey.withAlpha(10),
+                              onTap: () {
+                                locator<NavigationUtils>()
+                                    .push(routeForgotPassword);
+                              },
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 2, vertical: 2),
+                                child: Text(
+                                  Localization.of().resetPassword,
+                                  style: const TextStyle(
+                                    color: primaryTextColor,
+                                    fontWeight: fontWeightSemiBold,
+                                    decoration: TextDecoration.underline,
+                                  ),
                                 ),
                               ),
-                            ],
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 24),
-                        _getLoginButton(),
-                        const SizedBox(height: 24),
-                        _getSkipButton(),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 24),
+                    _getLoginButton(),
+                    const SizedBox(height: 12),
+                    _getSkipButton(),
+                  ],
+                ),
               ),
             ),
           ),
@@ -156,14 +160,23 @@ class _LoginScreenState extends State<LoginScreen> {
                 fontSize: fontSize14,
               ),
               children: [
-                TextSpan(
-                  text: Localization.of().joinAccount,
-                  style: const TextStyle(
-                    color: primaryTextColor,
-                    fontWeight: fontWeightSemiBold,
-                    decoration: TextDecoration.underline,
+                TextSpan(text: " "),
+                WidgetSpan(
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(4),
+                    splashColor: Colors.grey.withAlpha(10),
+                    onTap: () {
+                      locator<NavigationUtils>().pushReplacement(routeRegister);
+                    },
+                    child: Text(
+                      Localization.of().joinAccount,
+                      style: const TextStyle(
+                        color: primaryTextColor,
+                        fontWeight: fontWeightSemiBold,
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
                   ),
-                  recognizer: _tapGestureRecognizer,
                 ),
               ],
             ),
@@ -221,20 +234,28 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  _getSkipButton() {
+  Widget _getSkipButton() {
     return TextButton(
-        onPressed: () {
-          locator<NavigationUtils>().pushAndRemoveUntil(routeBase);
-        },
-        child: Center(
-          child: Text(
-            Localization.of().skipText,
-            style: const TextStyle(
-              fontSize: fontSize14,
-              color: primaryTextColor,
-              decoration: TextDecoration.underline,
-            ),
+      style: TextButton.styleFrom(
+        splashFactory: NoSplash.splashFactory,
+        overlayColor: Colors.transparent,
+        padding: EdgeInsets.zero,
+        minimumSize: Size.zero,
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      ),
+      onPressed: () {
+        locator<NavigationUtils>().pushAndRemoveUntil(routeBase);
+      },
+      child: Center(
+        child: Text(
+          Localization.of().skipText,
+          style: const TextStyle(
+            fontSize: fontSize14,
+            color: primaryTextColor,
+            decoration: TextDecoration.underline,
           ),
-        ));
+        ),
+      ),
+    );
   }
 }

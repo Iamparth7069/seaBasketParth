@@ -12,13 +12,14 @@ enum PopupMenuItemType {
 }
 
 enum ProductSortType {
-  relevance("name_asc"),
-  priceLowToHigh("price_low"),
-  priceHighToLow("price_high");
+  relevance("Relevance", "name_asc"),
+  priceLowToHigh("Price:Low-High", "price_low"),
+  priceHighToLow("Price:High-Low", "price_high");
 
+  final String value;
   final String displayValue;
 
-  const ProductSortType(this.displayValue);
+  const ProductSortType(this.value, this.displayValue);
 }
 
 enum OrderStatus {

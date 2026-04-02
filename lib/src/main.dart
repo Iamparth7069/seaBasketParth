@@ -10,7 +10,6 @@ import 'package:seabasket/src/providers/category_provider.dart';
 import 'package:seabasket/src/providers/checkout_provider.dart';
 import 'package:seabasket/src/providers/product_provider.dart';
 import 'package:seabasket/src/providers/order_provider.dart';
-import 'package:seabasket/src/providers/order_status_provider.dart';
 import 'package:seabasket/src/providers/user_provider.dart';
 
 import 'package:seabasket/src/providers/theme_provier.dart';
@@ -52,7 +51,6 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => CartProvider()),
         ChangeNotifierProvider(create: (_) => CheckoutProvider()),
         ChangeNotifierProvider(create: (_) => OrderProvider()),
-        ChangeNotifierProvider(create: (_) => OrderStatusProvider()),
       ],
       child: Consumer<ThemeProvider>(
         builder: (context, themeData, child) => MaterialApp(

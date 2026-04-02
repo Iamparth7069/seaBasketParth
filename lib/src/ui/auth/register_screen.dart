@@ -13,7 +13,6 @@ import 'package:seabasket/src/models/user.dart';
 import 'package:seabasket/src/widgets/primary_button.dart';
 import 'package:seabasket/src/widgets/primary_text_field.dart';
 import '../../base/extensions/scaffold_extension.dart';
-import '../../base/utils/progress_dialog_utils.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({Key? key}) : super(key: key);
@@ -46,12 +45,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
         hashedPassword: enteredPassword,
         phoneNumber: enteredPhoneNumber);
 
-    ProgressDialogUtils.showProgressDialog();
-
     final success = await locator<AuthController>().register(context, user);
-    ProgressDialogUtils.dismissProgressDialog();
-
     if (success != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(Localization.of().registerSuccessful),
+          duration: const Duration(seconds: 2),
+        ),
+      );
       locator<NavigationUtils>().pushReplacement(routeLogin);
     }
   }
@@ -61,7 +62,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.initState();
     _tapGestureRecognizer = TapGestureRecognizer()
       ..onTap = () {
-        locator<NavigationUtils>().push(routeLogin);
+        locator<NavigationUtils>().pushReplacement(routeLogin);
       };
   }
 
@@ -77,115 +78,124 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Expanded(
-          child: SingleChildScrollView(
-              child: Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: context.getWidth(0.07),
-            ),
-            child:
-                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              SizedBox(height: context.getHeight(0.06)),
-              Text(
-                Localization.of().registerTitle,
-                style: const TextStyle(
-                  fontSize: fontSize28,
-                  fontWeight: fontWeightSemiBold,
-                  color: primaryTextColor,
-                ),
+    return Form(
+      key: _formKey,
+      child: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+                child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: context.getWidth(0.07),
               ),
-              Text(
-                Localization.of().registerSubtitle,
-                style: const TextStyle(
-                  fontSize: fontSize16,
-                  color: secondaryTextColor,
-                ),
-              ),
-              const SizedBox(height: 24),
-              Form(
-                key: _formKey,
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _getUsernameTextField(),
-                      const SizedBox(height: 16),
-                      _getEmailTextField(),
-                      const SizedBox(height: 16),
-                      _getPasswordTextField(),
-                      const SizedBox(height: 16),
-                      _getPhoneNumberTextField(),
-                      const SizedBox(height: 16),
-                      RichText(
-                        text: TextSpan(
-                          text: Localization.of().registerMessage,
-                          style: const TextStyle(
-                            color: secondaryTextColor,
-                            fontSize: fontSize14,
-                          ),
-                          children: [
-                            TextSpan(
-                              text: Localization.of().registerTermMessage,
-                              style: const TextStyle(
-                                color: primaryTextColor,
-                                fontWeight: fontWeightSemiBold,
-                                decoration: TextDecoration.underline,
-                              ),
-                            ),
-                            const TextSpan(text: " "),
-                            TextSpan(
-                              text: Localization.of().and,
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      Localization.of().registerTitle,
+                      style: const TextStyle(
+                        fontSize: fontSize28,
+                        fontWeight: fontWeightSemiBold,
+                        color: primaryTextColor,
+                      ),
+                    ),
+                    Text(
+                      Localization.of().registerSubtitle,
+                      style: const TextStyle(
+                        fontSize: fontSize16,
+                        color: secondaryTextColor,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _getUsernameTextField(),
+                          const SizedBox(height: 16),
+                          _getEmailTextField(),
+                          const SizedBox(height: 16),
+                          _getPasswordTextField(),
+                          const SizedBox(height: 16),
+                          _getPhoneNumberTextField(),
+                          const SizedBox(height: 16),
+                          RichText(
+                            text: TextSpan(
+                              text: Localization.of().registerMessage,
                               style: const TextStyle(
                                 color: secondaryTextColor,
                                 fontSize: fontSize14,
                               ),
+                              children: [
+                                const TextSpan(text: " "),
+                                TextSpan(
+                                  text: Localization.of().registerTermMessage,
+                                  style: const TextStyle(
+                                    color: primaryTextColor,
+                                    fontWeight: fontWeightSemiBold,
+                                    decoration: TextDecoration.underline,
+                                  ),
+                                ),
+                                const TextSpan(text: " "),
+                                TextSpan(
+                                  text: Localization.of().and,
+                                  style: const TextStyle(
+                                    color: secondaryTextColor,
+                                    fontSize: fontSize14,
+                                  ),
+                                ),
+                                const TextSpan(text: " "),
+                                TextSpan(
+                                  text: Localization.of().cookieUse,
+                                  style: const TextStyle(
+                                    color: primaryTextColor,
+                                    fontWeight: fontWeightSemiBold,
+                                    decoration: TextDecoration.underline,
+                                  ),
+                                ),
+                              ],
                             ),
-                            const TextSpan(text: " "),
-                            TextSpan(
-                              text: Localization.of().cookieUse,
-                              style: const TextStyle(
-                                color: primaryTextColor,
-                                fontWeight: fontWeightSemiBold,
-                                decoration: TextDecoration.underline,
-                              ),
-                            ),
-                          ],
+                          ),
+                          const SizedBox(height: 24),
+                          _getRegisterButton(),
+                        ]),
+                  ]),
+            )),
+          ),
+          Padding(
+            padding: EdgeInsets.all(context.getHeight(0.01)),
+            child: RichText(
+              text: TextSpan(
+                text: Localization.of().msgAlreadyAccount,
+                style: const TextStyle(
+                  color: secondaryTextColor,
+                  fontSize: fontSize14,
+                ),
+                children: [
+                  const TextSpan(text: " "),
+                  WidgetSpan(
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(4),
+                      splashColor: Colors.grey.withAlpha(10),
+                      onTap: () {
+                        locator<NavigationUtils>().pushReplacement(routeLogin);
+                      },
+                      child: Text(
+                        Localization.of().loginTextSpanText,
+                        style: const TextStyle(
+                          color: primaryTextColor,
+                          fontWeight: fontWeightSemiBold,
+                          decoration: TextDecoration.underline,
                         ),
                       ),
-                      const SizedBox(height: 24),
-                      _getRegisterButton(),
-                    ]),
-              ),
-            ]),
-          )),
-        ),
-        Padding(
-          padding: EdgeInsets.all(context.getHeight(0.01)),
-          child: RichText(
-            text: TextSpan(
-              text: Localization.of().msgAlredyAccount,
-              style: const TextStyle(
-                color: secondaryTextColor,
-                fontSize: fontSize14,
-              ),
-              children: [
-                const TextSpan(text: " "),
-                TextSpan(
-                  text: Localization.of().loginText,
-                  recognizer: _tapGestureRecognizer,
-                  style: const TextStyle(
-                    color: primaryTextColor,
-                    fontWeight: fontWeightSemiBold,
-                    decoration: TextDecoration.underline,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-        ),
-      ],
-    ).authContainerScaffold(context: context);
+        ],
+      ).authContainerScaffold(context: context),
+    );
   }
 
   Widget _getUsernameTextField() {

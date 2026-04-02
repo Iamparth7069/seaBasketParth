@@ -1,8 +1,6 @@
 import 'package:seabasket/src/apis/api_route_constant.dart';
 import 'package:seabasket/src/apis/api_service.dart';
 import 'package:seabasket/src/base/dependencyinjection/locator.dart';
-import 'package:seabasket/src/base/utils/constants/preference_key_constant.dart';
-import 'package:seabasket/src/base/utils/preference_utils.dart';
 import 'package:seabasket/src/models/response/res_payment_intent_model.dart';
 
 class CheckoutApiManager {

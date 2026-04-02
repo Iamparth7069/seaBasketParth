@@ -1,15 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:seabasket/src/base/dependencyinjection/locator.dart';
 import 'package:seabasket/src/base/utils/constants/color_constant.dart';
 import 'package:seabasket/src/base/utils/constants/fontsize_constant.dart';
+import 'package:seabasket/src/base/utils/navigation_utils.dart';
 
 extension ScaffoldExtension on Widget {
   Scaffold authContainerScaffold({
     required BuildContext context,
-    PreferredSizeWidget? appBar,
+    bool showBackButton = false,
+    List<Widget>? actions,
+    String? title,
   }) {
     return Scaffold(
-      extendBody: true,
-      appBar: appBar,
+      appBar: AppBar(
+          title: title != null ? Text(title) : null,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: showBackButton
+              ? IconButton(
+                  onPressed: locator<NavigationUtils>().pop,
+                  icon: const Icon(Icons.arrow_back, color: primaryColor),
+                )
+              : null,
+          actions: actions),
       backgroundColor: primaryScaffold,
       body: SafeArea(
         child: this,
@@ -52,12 +65,11 @@ extension ScaffoldExtension on Widget {
   Dialog dialogContainer({double height = 350}) {
     return Dialog(
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10.0),
+        borderRadius: BorderRadius.circular(20),
       ),
       elevation: 20.0,
       insetPadding: const EdgeInsets.symmetric(horizontal: 25.0),
       child: Container(
-        height: height,
         padding: const EdgeInsets.all(20.0),
         child: this,
       ),

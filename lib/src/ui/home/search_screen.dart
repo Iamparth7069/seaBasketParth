@@ -14,14 +14,12 @@ import 'package:seabasket/src/widgets/primary_text_field.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
-
   @override
   State<SearchScreen> createState() => _SearchScreenState();
 }
 
 class _SearchScreenState extends State<SearchScreen> {
   final searchController = TextEditingController();
-
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -30,7 +28,7 @@ class _SearchScreenState extends State<SearchScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: _getSearchbarTextField(),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
         Expanded(child: _searchResult()),
       ],
     );
@@ -39,17 +37,30 @@ class _SearchScreenState extends State<SearchScreen> {
   Widget _getSearchbarTextField() {
     return PrimaryTextField(
       autoFocus: true,
-      onChanged: (value) {
-        context.read<ProductProvider>().setSearchQuery(value);
-        locator<ProductController>()
-            .getProducts(
-          name: value.trim().isEmpty ? null : value.trim(),
-        )
-            .then((result) {
-          if (result != null) {
-            context.read<ProductProvider>().setProducts(result);
-          }
-        });
+      onChanged: (value) async {
+        final provider = context.read<ProductProvider>();
+        final query = value.trim();
+
+        provider.setSearchQuery(query);
+
+        if (query.isEmpty) {
+          provider.setProducts([]);
+          provider.setSearching(false);
+          return;
+        }
+
+        provider.setSearching(true);
+
+        final result =
+            await locator<ProductController>().getProducts(name: query);
+
+        provider.setSearching(false);
+
+        if (result != null) {
+          provider.setProducts(result);
+        } else {
+          provider.setProducts([]);
+        }
       },
       controller: searchController,
       label: "",
@@ -62,18 +73,30 @@ class _SearchScreenState extends State<SearchScreen> {
   Widget _searchResult() {
     return Consumer<ProductProvider>(
       builder: (context, productProvider, child) {
+        if (productProvider.isSearching) {
+          return const Center(child: CircularProgressIndicator());
+        }
         if (productProvider.searchQuery.trim().isEmpty) {
           return Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.search, size: 48, color: secondaryIconColor),
+              const Icon(Icons.search_outlined,
+                  size: 48, color: secondaryIconColor),
               const SizedBox(height: 12),
               Text(
-                Localization.of().searchText,
+                Localization.of().noResultFoundText,
                 style: const TextStyle(
                   fontSize: fontSize18,
                   color: primaryTextColor,
                   fontWeight: fontWeightSemiBold,
+                ),
+              ),
+              Text(
+                Localization.of().noResultFoundSubText,
+                style: const TextStyle(
+                  fontSize: fontSize16,
+                  color: secondaryTextColor,
+                  fontWeight: fontWeightRegular,
                 ),
               ),
             ],
@@ -140,7 +163,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 ),
               ),
               subtitle: Text(
-                "${product.price}",
+                " ₹${product.price}",
                 style: const TextStyle(
                   fontSize: fontSize12,
                   color: secondaryTextColor,

@@ -2,8 +2,11 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:seabasket/src/base/utils/dialog_utils.dart';
 import 'package:seabasket/src/base/utils/localization/localization.dart';
+import 'package:seabasket/src/base/utils/progress_dialog_utils.dart';
 
 Future<void> handleHttpError(DioException e) async {
+  ProgressDialogUtils.dismissProgressDialog();
+
   switch (e.type) {
     case DioExceptionType.connectionTimeout:
       showAlertDialog(message: Localization.of().poorInternetConnection);

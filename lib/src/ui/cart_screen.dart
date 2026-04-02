@@ -33,7 +33,7 @@ class _CartScreenState extends State<CartScreen> {
       final cartData =
           await locator<CartController>().getCartData(modify: true);
       if (cartData != null) {
-        context.read<CartProvider>().setCartItems(cartData.items);
+        context.read<CartProvider>().setCartItems(cartData);
       }
     });
   }
@@ -114,7 +114,7 @@ class _CartScreenState extends State<CartScreen> {
       decoration: BoxDecoration(
         color: secondaryColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: containerBorderColor),
+        border: Border.all(color: containerBorderColor.withAlpha(100)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -159,9 +159,7 @@ class _CartScreenState extends State<CartScreen> {
                             final data = await locator<CartController>()
                                 .removeFromCart(itemId, true);
                             if (mounted && data != null) {
-                              context
-                                  .read<CartProvider>()
-                                  .setCartItems(data.items);
+                              context.read<CartProvider>().setCartItems(data);
                             }
                           }
                         },
@@ -256,7 +254,7 @@ class _CartScreenState extends State<CartScreen> {
           const SizedBox(height: 16),
           _summaryDetail(Localization.of().shippingFeeText,
               "₹ ${currencyFormat.format(cartProvider.shippingFee)}"),
-          const Divider(color: containerBorderColor, height: 30),
+          Divider(color: containerBorderColor.withAlpha(100), height: 30),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -283,23 +281,6 @@ class _CartScreenState extends State<CartScreen> {
     );
   }
 
-  Widget _bottomButton() {
-    return Padding(
-      padding: EdgeInsets.symmetric(
-          horizontal: context.getWidth(0.04),
-          vertical: context.getHeight(0.02)),
-      child: PrimaryButton(
-        buttonText: Localization.of().goToCheckoutText,
-        buttonColor: primaryButtonColor,
-        backgroundColor: primaryButtonColor,
-        trailingIcon: Icons.arrow_forward,
-        onButtonClick: () {
-          locator<NavigationUtils>().push(routeCheckout);
-        },
-      ),
-    );
-  }
-
   Widget _summaryDetail(String label, String value) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -320,6 +301,23 @@ class _CartScreenState extends State<CartScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _bottomButton() {
+    return Padding(
+      padding: EdgeInsets.symmetric(
+          horizontal: context.getWidth(0.04),
+          vertical: context.getHeight(0.02)),
+      child: PrimaryButton(
+        buttonText: Localization.of().goToCheckoutText,
+        buttonColor: primaryButtonColor,
+        backgroundColor: primaryButtonColor,
+        trailingIcon: Icons.arrow_forward,
+        onButtonClick: () {
+          locator<NavigationUtils>().push(routeCheckout);
+        },
+      ),
     );
   }
 }

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:seabasket/src/base/utils/constants/app_constant.dart';
-import 'package:seabasket/src/base/utils/enum_utils.dart';
 import 'package:seabasket/src/base/utils/localization/localization.dart';
 import 'package:intl/intl.dart';
 import '../utils/constants/color_constant.dart';
@@ -94,6 +93,16 @@ extension StringExtension on String {
     final date = int.tryParse(parts[1]);
     if (date == null || date < 1 || date > 31) {
       return Localization.of().invalidDateMessage;
+    }
+    return null;
+  }
+
+  String? isValidOtp({int length = 4}) {
+    if (trim().isEmpty) {
+      return Localization.of().otpRequiredMessage;
+    }
+    if (trim().length != length) {
+      return Localization.of().invalidOtp;
     }
     return null;
   }

@@ -23,10 +23,8 @@ const String permissionTypeCamera = "camera_access_denied";
 
 //navigation params
 const String paramEmail = "email";
-
-const String paramisLoginScreen = "isLogin";
+const String paramIsLogin = "isLogin";
 const String paramProductId = "productId";
-
 //order params
 const String paramOrderId = "orderId";
 const String paramOrderStatus = "orderStatus";

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:seabasket/src/base/dependencyinjection/locator.dart';
@@ -14,9 +15,9 @@ import 'package:seabasket/src/controllers/cart_controller.dart';
 import 'package:seabasket/src/controllers/checkout_controller.dart';
 import 'package:seabasket/src/providers/cart_provider.dart';
 import 'package:seabasket/src/providers/checkout_provider.dart';
+import 'package:seabasket/src/providers/user_provider.dart';
 import 'package:seabasket/src/widgets/primary_button.dart';
 import 'package:seabasket/src/widgets/primary_text_field.dart';
-
 import '../controllers/auth/auth_controller.dart';
 
 class CheckoutScreen extends StatefulWidget {
@@ -36,31 +37,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   void initState() {
     super.initState();
     _addressController = TextEditingController();
-
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final checkoutProvider = context.read<CheckoutProvider>();
-
       final cartData =
           await locator<CartController>().getCartData(modify: true);
       if (cartData != null && mounted) {
         if (cartData.deliveryAddress != null &&
             cartData.deliveryAddress!.isNotEmpty) {
           _addressController.text = cartData.deliveryAddress!;
-        }
-
-        if (!checkoutProvider.isBuyNow) {
-          context.read<CartProvider>().setCartItems(cartData.items);
-        }
-      }
-
-      if (checkoutProvider.isBuyNow) {
-        final buyNowCartItemId = checkoutProvider.buyNowItem?.cartItemId;
-        if (buyNowCartItemId != null) {
-          final updatedBuyNow = await locator<CartController>()
-              .getCartItemPatch(buyNowCartItemId);
-          if (updatedBuyNow != null && mounted) {
-            checkoutProvider.setBuyNowItem(updatedBuyNow);
-          }
         }
       }
     });
@@ -69,7 +52,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   @override
   void dispose() {
     _addressController.dispose();
-    //  context.read<CheckoutProvider>().clearBuyNow();
     super.dispose();
   }
 
@@ -87,13 +69,40 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  Localization.of().deliveryAddressText,
-                  style: const TextStyle(
-                    fontSize: fontSize18,
-                    fontWeight: fontWeightBold,
-                    color: primaryTextColor,
-                  ),
+                Row(
+                  children: [
+                    TextButton(
+                      onPressed: () async {
+                        if (checkoutProvider.isEditing) {
+                          final newAddress = _addressController.text.trim();
+                          if (newAddress.isNotEmpty) {
+                            await locator<AuthController>().updateProfile(
+                              context,
+                              address: newAddress,
+                            );
+                          }
+                        }
+                        checkoutProvider.toggleEditing();
+                      },
+                      child: Text(
+                        checkoutProvider.isEditing
+                            ? Localization.of().save
+                            : Localization.of().changeText,
+                        style: const TextStyle(
+                          color: primaryButtonColor,
+                          fontWeight: fontWeightMedium,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      Localization.of().deliveryAddressText,
+                      style: const TextStyle(
+                        fontSize: fontSize18,
+                        fontWeight: fontWeightBold,
+                        color: primaryTextColor,
+                      ),
+                    ),
+                  ],
                 ),
                 SizedBox(height: context.getHeight(0.02)),
                 _addressSection(checkoutProvider),
@@ -109,19 +118,15 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   ),
                 ),
                 SizedBox(height: context.getHeight(0.02)),
-                checkoutProvider.isBuyNow
-                    ? _buyNowOrderSummary(checkoutProvider)
-                    : _cartOrderSummary(cartProvider),
+                _cartOrderSummary(cartProvider),
                 SizedBox(height: context.getHeight(0.03)),
-                checkoutProvider.isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : PrimaryButton(
-                        buttonText: Localization.of().contiunePaymentText,
-                        buttonColor: primaryButtonColor,
-                        backgroundColor: primaryButtonColor,
-                        trailingIcon: Icons.arrow_forward,
-                        onButtonClick: _handleContinue,
-                      ),
+                PrimaryButton(
+                  buttonText: Localization.of().contiunePaymentText,
+                  buttonColor: primaryButtonColor,
+                  backgroundColor: primaryButtonColor,
+                  trailingIcon: Icons.arrow_forward,
+                  onButtonClick: _handleContinue,
+                ),
                 SizedBox(height: context.getHeight(0.02)),
               ],
             ),
@@ -149,171 +154,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           controller: _addressController,
           maxLines: 3,
           readOnly: !checkoutProvider.isEditing,
-          contentPadding: const EdgeInsets.all(14),
+          contentPadding: const EdgeInsets.only(left: 8, top: 12),
           textInputAction: TextInputAction.done,
           validateFunction: (value) =>
               value?.isFieldEmpty(Localization.of().msgAddressEmpty),
         ),
-        SizedBox(height: context.getHeight(0.01)),
-        Align(
-          alignment: Alignment.centerRight,
-          child: TextButton(
-            onPressed: () async {
-              if (checkoutProvider.isEditing) {
-                final newAddress = _addressController.text.trim();
-                if (newAddress.isNotEmpty) {
-                  await locator<AuthController>().updateProfile(
-                    context,
-                    address: newAddress,
-                  );
-                }
-              }
-              checkoutProvider.toggleEditing();
-            },
-            child: Text(
-              checkoutProvider.isEditing
-                  ? Localization.of().save
-                  : Localization.of().changeText,
-              style: const TextStyle(
-                color: primaryButtonColor,
-                fontWeight: fontWeightMedium,
-              ),
-            ),
-          ),
-        ),
       ],
-    );
-  }
-
-  Widget _buyNowOrderSummary(CheckoutProvider checkoutProvider) {
-    final item = checkoutProvider.buyNowItem;
-    if (item == null) return const SizedBox.shrink();
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: containerBorderColor),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (item.isAvailable == false) ...[
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.red.shade50,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.red.shade200),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.warning_amber_rounded,
-                      color: Colors.red.shade600, size: 18),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      Localization.of().unavailableItemMessage,
-                      style: TextStyle(
-                        fontSize: fontSize12,
-                        color: Colors.red.shade700,
-                        fontWeight: fontWeightMedium,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-          ],
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF5F5F5),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              children: [
-                if (item.image != null && item.image!.isNotEmpty) ...[
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.memory(
-                      Uri.parse(item.image!).data!.contentAsBytes(),
-                      width: 64,
-                      height: 64,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => const SizedBox(
-                        width: 64,
-                        height: 64,
-                        child: Icon(Icons.image_not_supported_outlined,
-                            size: 28, color: Colors.grey),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                ],
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        item.productName ?? '',
-                        style: const TextStyle(
-                          fontSize: fontSize14,
-                          fontWeight: fontWeightBold,
-                          color: primaryTextColor,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '${Localization.of().sizeText} : ${item.size ?? ''}',
-                        style: const TextStyle(
-                          fontSize: fontSize12,
-                          color: secondaryTextColor,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '${Localization.of().quantityText} : ${item.quantity ?? 1}',
-                        style: const TextStyle(
-                          fontSize: fontSize12,
-                          color: secondaryTextColor,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Text(
-                  '₹ ${_format.format(item.effectivePrice ?? 0)}',
-                  style: const TextStyle(
-                    fontSize: fontSize14,
-                    fontWeight: fontWeightBold,
-                    color: primaryTextColor,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          _summaryRow(
-            Localization.of().subTotalText,
-            '₹ ${_format.format(checkoutProvider.buyNowSubtotal)}',
-          ),
-          SizedBox(height: context.getHeight(0.01)),
-          _summaryRow(
-            Localization.of().shippingFeeText,
-            '₹ ${_format.format(checkoutProvider.shippingFee)}',
-          ),
-          const Divider(height: 24),
-          _summaryRow(
-            Localization.of().totalText,
-            '₹ ${_format.format(checkoutProvider.buyNowTotal)}',
-            isBold: true,
-          ),
-        ],
-      ),
     );
   }
 
@@ -322,7 +168,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: containerBorderColor),
+        border: Border.all(color: containerBorderColor.withAlpha(80)),
       ),
       child: Column(
         children: [
@@ -373,35 +219,31 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   void _handleContinue() async {
     if (!_formKey.currentState!.validate()) return;
     FocusScope.of(context).unfocus();
-    final checkoutProvider = context.read<CheckoutProvider>();
     final cartProvider = context.read<CartProvider>();
-    final double totalAmount = checkoutProvider.isBuyNow
-        ? checkoutProvider.buyNowTotal
-        : cartProvider.total;
-
-    final result =
-        await locator<CheckoutController>().processStripePayment(totalAmount);
+    final double totalAmount = cartProvider.total;
+    final user = context.read<UserProvider>().currentUser;
+    if (user == null) return;
+    await locator<CheckoutController>().processStripePayment(
+      amount: totalAmount,
+      name: user!.username ?? '',
+      email: user.email,
+      phone: user.phoneNumber ?? '',
+      address: Address(
+        line1: user.address ?? '',
+        line2: '',
+        city: 'Ahemdabad',
+        state: 'Gujarat',
+        postalCode: '400001',
+        country: 'IN',
+      ),
+    );
     if (!mounted) return;
-    if (result == 'success') {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(Localization.of().paymentSuccessText),
-          backgroundColor: Colors.green,
-        ),
-      );
 
-      // checkoutProvider.clearBuyNow();
-      locator<NavigationUtils>().pushReplacement(routeOrderDetail);
-    } else if (result == 'canceled') {
-      return;
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(Localization.of().paymentFailedText),
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 4),
-        ),
-      );
-    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+          content: Text(Localization.of().paymentSuccessText),
+          backgroundColor: successColor),
+    );
+    locator<NavigationUtils>().pushReplacement(routeOrderDetail);
   }
 }

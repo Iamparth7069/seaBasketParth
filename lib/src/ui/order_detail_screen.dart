@@ -14,8 +14,6 @@ import 'package:seabasket/src/controllers/order_controller.dart';
 import 'package:seabasket/src/providers/order_provider.dart';
 import 'package:seabasket/src/providers/user_provider.dart';
 import 'package:seabasket/src/widgets/login_required_widget.dart';
-import '../providers/bottom_nav_provider.dart';
-import '../providers/order_status_provider.dart';
 
 class OrderDetailScreen extends StatefulWidget {
   const OrderDetailScreen({super.key});
@@ -125,7 +123,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                           decoration: BoxDecoration(
                             color: (order.status?.toLowerCase() == 'deliverd' ||
                                     order.status?.toLowerCase() == 'delivered')
-                                ? Colors.green.withAlpha(25)
+                                ? successColor.withAlpha(25)
                                 : primaryColor.withAlpha(25),
                             borderRadius: BorderRadius.circular(20),
                           ),
@@ -139,7 +137,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                                   (order.status?.toLowerCase() == 'deliverd' ||
                                           order.status?.toLowerCase() ==
                                               'delivered')
-                                      ? Colors.green
+                                      ? successColor
                                       : primaryColor,
                             ),
                           ),
@@ -159,7 +157,6 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                         const SizedBox(width: 8),
                         Text(
                           "${Localization.of().itemCountText}: ${order.itemCount}",
-                          //"${order.orderId}",
                           style: const TextStyle(
                             fontSize: fontSize14,
                             color: secondaryTextColor,
@@ -198,15 +195,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       title: Localization.of().orderDetailText,
       centerTitle: true,
       leading: IconButton(
-        onPressed: _handleToHomeScreen,
+        onPressed: () => Navigator.pop(context),
         icon: const Icon(Icons.arrow_back),
       ),
     );
-  }
-
-  void _handleToHomeScreen() {
-    context.read<OrderStatusProvider>().reset();
-    context.read<BottomNavProvider>().changeTab(0);
-    locator<NavigationUtils>().pushAndRemoveUntil(routeBase);
   }
 }

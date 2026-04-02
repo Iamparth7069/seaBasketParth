@@ -4,7 +4,6 @@ import 'package:seabasket/src/apis/apimanagers/cart_api_manager.dart';
 import 'package:seabasket/src/apis/apimanagers/category_api_manager.dart';
 import 'package:seabasket/src/apis/apimanagers/checkout_api_manager.dart';
 import 'package:seabasket/src/apis/apimanagers/order_api_manager.dart';
-import 'package:seabasket/src/apis/apimanagers/order_status_api_manager.dart';
 import 'package:seabasket/src/apis/apimanagers/product_api_manager.dart';
 import 'package:seabasket/src/base/utils/navigation_utils.dart';
 import 'package:seabasket/src/controllers/auth/auth_controller.dart';
@@ -14,7 +13,6 @@ import 'package:seabasket/src/controllers/cart_controller.dart';
 import 'package:seabasket/src/controllers/checkout_controller.dart';
 import 'package:seabasket/src/controllers/product_controller.dart';
 import 'package:seabasket/src/controllers/order_controller.dart';
-import 'package:seabasket/src/controllers/order_status_controller.dart';
 
 final locator = GetIt.instance;
 
@@ -30,7 +28,6 @@ void setupLocator() {
   locator.registerSingleton<CartApiManager>(CartApiManager());
   locator.registerSingleton<CheckoutApiManager>(CheckoutApiManager());
   locator.registerSingleton<OrderApiManager>(OrderApiManager());
-  locator.registerSingleton<OrderStatusApiManager>(OrderStatusApiManager());
 
   // Controller
   locator.registerSingleton<AuthController>(AuthController());
@@ -39,5 +36,4 @@ void setupLocator() {
   locator.registerSingleton<CartController>(CartController());
   locator.registerSingleton<CheckoutController>(CheckoutController());
   locator.registerSingleton<OrderController>(OrderController());
-  locator.registerSingleton<OrderStatusController>(OrderStatusController());
 }

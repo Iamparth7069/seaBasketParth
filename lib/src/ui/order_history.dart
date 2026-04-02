@@ -7,7 +7,9 @@ import 'package:seabasket/src/base/utils/constants/color_constant.dart';
 import 'package:seabasket/src/base/utils/constants/fontsize_constant.dart';
 import 'package:seabasket/src/base/utils/enum_utils.dart';
 import 'package:seabasket/src/base/utils/image_utils.dart';
+import 'package:seabasket/src/base/utils/localization/localization.dart';
 import 'package:seabasket/src/controllers/order_controller.dart';
+import 'package:seabasket/src/models/request/req_add_rating_model.dart';
 import 'package:seabasket/src/models/response/res_my_order_model.dart';
 import 'package:provider/provider.dart';
 import 'package:seabasket/src/providers/order_provider.dart';
@@ -47,17 +49,13 @@ class _OrderHistoryScreenState extends State<OrderHistory> {
   Widget build(BuildContext context) {
     return Consumer<OrderProvider>(
       builder: (context, provider, child) {
-        final _orders = provider.historyOrders;
-
-        return (_orders.isEmpty
-                ? const Center(child: Text("No orders found."))
-                : SingleChildScrollView(
-                    padding: const EdgeInsets.all(16),
-                    child: _orderCard(_orders.first),
-                  ))
-            .commonScaffold(
+        final orders = provider.historyOrders;
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: _orderCard(orders.first),
+        ).commonScaffold(
           context: context,
-          title: "Order History",
+          title: Localization.of().orderHistoryTitle,
           centerTitle: true,
           leading: IconButton(
             onPressed: () => Navigator.pop(context),
@@ -69,17 +67,12 @@ class _OrderHistoryScreenState extends State<OrderHistory> {
   }
 
   Widget _orderCard(ResMyOrderModel order) {
-    OrderStatus getOrderStatus(String? status) {
-      final value = status?.toLowerCase().trim() ?? "";
+    final statusValue = order.status?.toLowerCase().trim() ?? "";
 
-      if (value.contains("pack")) return OrderStatus.packing;
-      if (value.contains("transit")) return OrderStatus.inTransit;
-      if (value.contains("deliver")) return OrderStatus.delivered;
-
-      return OrderStatus.placed;
-    }
-
-    final currentStatus = getOrderStatus(order.status);
+    final currentStatus = OrderStatus.values.firstWhere(
+      (e) => e.value == statusValue,
+      orElse: () => OrderStatus.placed,
+    );
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -87,7 +80,9 @@ class _OrderHistoryScreenState extends State<OrderHistory> {
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withAlpha(10),
+            color: order.status?.toLowerCase() == 'delivered'
+                ? successColor.withAlpha(25)
+                : Colors.black.withAlpha(10),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -101,7 +96,7 @@ class _OrderHistoryScreenState extends State<OrderHistory> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                "Order #${order.orderId ?? ''}",
+                "${Localization.of().orderIdText} #${order.orderId ?? ''}",
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 14,
@@ -110,7 +105,9 @@ class _OrderHistoryScreenState extends State<OrderHistory> {
               Text(
                 order.status ?? '',
                 style: TextStyle(
-                  color: _getStatusColor(order.status),
+                  color: order.status?.toLowerCase() == 'delivered'
+                      ? successColor
+                      : primaryColor,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -123,18 +120,20 @@ class _OrderHistoryScreenState extends State<OrderHistory> {
                   .map(
                     (item) => Padding(
                       padding: const EdgeInsets.only(bottom: 10),
-                      child: _productRow(item),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _productRow(item),
+                          if (currentStatus == OrderStatus.delivered) ...[
+                            const SizedBox(height: 25),
+                            Text(Localization.of().giveRatingText),
+                            _buildRatingStars(item),
+                          ],
+                        ],
+                      ),
                     ),
                   )
                   .toList(),
-            )
-          else
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 8),
-              child: Text(
-                "No items found for this order.",
-                style: TextStyle(color: Colors.grey, fontSize: 13),
-              ),
             ),
           const SizedBox(height: 12),
           _buildOrderStepper(currentStatus),
@@ -144,47 +143,47 @@ class _OrderHistoryScreenState extends State<OrderHistory> {
   }
 
   Widget _productRow(dynamic item) {
-    return Row(
-      children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(10),
-          child: SizedBox(
-            width: 65,
-            height: 65,
-            child: ImageUtils().getBase64Image(
-              item.image,
-              fit: BoxFit.cover,
+    return Row(children: [
+      ClipRRect(
+        borderRadius: BorderRadius.circular(10),
+        child: SizedBox(
+          width: 65,
+          height: 65,
+          child: ImageUtils().getBase64Image(
+            item.image,
+            fit: BoxFit.cover,
+          ),
+        ),
+      ),
+      const SizedBox(width: 12),
+      Expanded(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              item.productName ?? '',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+              ),
             ),
-          ),
+            const SizedBox(height: 4),
+            Text(
+              "${Localization.of().quantityText} : ${item.quantity}",
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              "₹ ${currencyFormat.format(item.price ?? 0)}",
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+            ),
+          ],
         ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                item.productName ?? '',
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 13,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                "Qty: ${item.quantity}",
-                style: const TextStyle(fontSize: 12, color: Colors.grey),
-              ),
-            ],
-          ),
-        ),
-        Text(
-          "₹ ${currencyFormat.format(item.price ?? 0)}",
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-        ),
-      ],
-    );
+      ),
+    ]);
   }
 
   Widget _buildOrderStepper(OrderStatus currentStatus) {
@@ -193,9 +192,9 @@ class _OrderHistoryScreenState extends State<OrderHistory> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 10),
-        const Text(
-          "Order Status",
-          style: TextStyle(fontWeight: FontWeight.bold),
+        Text(
+          Localization.of().orderStatusText,
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 10),
         ...steps.map((step) {
@@ -285,20 +284,56 @@ class _OrderHistoryScreenState extends State<OrderHistory> {
     );
   }
 
-  Color _getStatusColor(String? status) {
-    final statusValue = status?.toLowerCase().trim();
-
-    switch (statusValue) {
-      case "delivered":
-        return Colors.green;
-      case "cancelled":
-        return Colors.red;
-      case "pending":
-        return Colors.orange;
-      case "packing":
-        return Colors.blue;
-      default:
-        return Colors.blueGrey;
-    }
+  Widget _buildRatingStars(dynamic item) {
+    return Consumer<OrderProvider>(
+      builder: (context, provider, child) {
+        final selectedRating = provider.getRating(item.productId);
+        final isClicked = provider.isClicked(item.productId);
+        return Row(
+          children: List.generate(5, (index) {
+            return IconButton(
+              onPressed: isClicked
+                  ? null
+                  : () async {
+                      final rating = index + 1;
+                      provider.setClicked(item.productId, true);
+                      provider.setRating(item.productId, rating);
+                      final req = ReqAddRatingModel(
+                        productId: item.productId,
+                        comment: "",
+                        rating: rating,
+                      );
+                      final success =
+                          await locator<OrderController>().addReview(req);
+                      if (success) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content:
+                                Text(Localization.of().ratingSubmittedMessage),
+                          ),
+                        );
+                      } else {
+                        provider.setRating(item.productId, 0);
+                        provider.setClicked(item.productId, false);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content:
+                                Text(Localization.of().ratingFailedMessage),
+                          ),
+                        );
+                      }
+                    },
+              icon: Icon(
+                Icons.star,
+                size: 26,
+                color: index < selectedRating
+                    ? fillRatingIconColor
+                    : ratingIconColor,
+              ),
+            );
+          }),
+        );
+      },
+    );
   }
 }

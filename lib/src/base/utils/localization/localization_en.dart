@@ -1,5 +1,3 @@
-import 'package:seabasket/src/base/utils/enum_utils.dart';
-
 import 'localization.dart';
 
 class LocalizationEN implements Localization {
@@ -61,16 +59,20 @@ class LocalizationEN implements Localization {
 
   @override
   String get loginText => "Login";
+
+  @override
+  String get loginTextSpanText => "Log In";
+
   @override
   String get createAccountText => "Create an Account";
 
   @override
   String get joinAccount => "Join";
   @override
-  String get msgNotAccount => "Dont't have an account?";
+  String get msgNotAccount => "Don't have an account?";
 
   @override
-  String get msgAlredyAccount => "Already have an account?";
+  String get msgAlreadyAccount => "Already have an account?";
   @override
   String get resetPassword => "Reset your password";
 
@@ -91,9 +93,6 @@ class LocalizationEN implements Localization {
 
   @override
   String get passwordHint => "Enter your password";
-
-  @override
-  String get resetPasswordHint => "********";
 
   @override
   String get emailLabel => "Email";
@@ -118,8 +117,7 @@ class LocalizationEN implements Localization {
 
   @override
   String get msgPasswordError =>
-      "Password should be atleast 8 characters long and have atleast one uppercase, one alphanumeric and one number.";
-
+      "Password must contain at least 8 characters, including uppercase, lowercase, number, and a special character";
   @override
   String get loginSubtitle => "It's great to see you again.";
 
@@ -133,19 +131,19 @@ class LocalizationEN implements Localization {
   String get registerSubtitle => "Let's create your account";
 
   @override
-  String get registerMessage => "By signin up you agree to our";
+  String get registerMessage => "By signing up you agree to our";
 
   @override
-  String get registerTermMessage => "Terms,PrivacyPolicy,";
+  String get registerTermMessage => "Terms, Privacy Policy,";
 
   @override
-  String get cookieUse => "CookieUse";
+  String get cookieUse => "Cookie Use";
 
   @override
   String get and => "and";
 
   @override
-  String get forgotPasswordTitle => "Forgot password";
+  String get forgotPasswordTitle => "Forgot Password";
 
   @override
   String get forgotPasswordSubTitle =>
@@ -162,7 +160,7 @@ class LocalizationEN implements Localization {
 
   @override
   String get otpSubTitle1 =>
-      "Enter 4 digit code that your receive on your email (";
+      "Enter 4 digit code that you receive on your email (";
 
   @override
   String get otpSubTitle2 => ")";
@@ -171,7 +169,7 @@ class LocalizationEN implements Localization {
   String get continueText => "Continue";
 
   @override
-  String get emailNotReceived => "Email not Received?";
+  String get emailNotReceived => "Email not received?";
 
   @override
   String get resendCode => "Resend code";
@@ -191,26 +189,38 @@ class LocalizationEN implements Localization {
 
   @override
   String get passwordChangedSubText =>
-      "Your can now use your new password to login to your account.";
+      "You can now use your new password to login to your account.";
 
   @override
-  String get invalidOtp => "Invalid OTP";
+  String get invalidOtp => "Enter Full 4 digit OTP";
 
   @override
   String get otpMessage => "Your 4 digit OTP:";
+
+  @override
+  String get otpRequiredMessage => "OTP is Required";
 
   @override
   String get newOtpText => "New OTP:";
 
   @override
   String get skipText => "Skip";
+  //Base screen string
+  @override
+  String get homeText => "Home";
+
+  @override
+  String get accountText => "Account";
+
+  @override
+  String get savedText => "Saved";
 
   //Home screen String
   @override
   String get discoverText => "Discover";
 
   @override
-  String get searchText => "Search for clothes...";
+  String get noProductMessage => "No Product available";
 
   @override
   String get noProductFoundText => "No matching Product found";
@@ -241,16 +251,16 @@ class LocalizationEN implements Localization {
   String get moreText => " or more";
 
   @override
-  String get clearFilterText => "Clear Filter";
+  String get clearFilterText => "Clear Filters";
 
   // search screen text
 
   @override
-  String get noResultFoundText => "No Result Found!";
+  String get noResultFoundText => "No results found!";
 
   @override
   String get noResultFoundSubText =>
-      "  Try a similar word or something more general.";
+      "  Try a similar word or something \n more general.";
 
   // product detail screen text
   @override
@@ -272,15 +282,19 @@ class LocalizationEN implements Localization {
   @override
   String get loginAlertMessage => "Please login First!";
 
+  //Account screen
+  @override
+  String get myOrdersText => "My orders";
+
   //profile screen
   @override
-  String get fullNameText => "Full name";
+  String get fullNameText => "Full Name";
 
   @override
   String get msgPhoneNumberEmpty => "Phone number required";
 
   @override
-  String get phoneNumberText => "Phone number";
+  String get phoneNumberText => "Phone Number";
   @override
   String get phoneNumberHint => "Enter Phone number";
   @override
@@ -298,7 +312,7 @@ class LocalizationEN implements Localization {
   String get phoneNumberInvalid => "Invalid Phone Number!";
 
   @override
-  String get msgLogoutConfirm => "Are you sure want to logout?";
+  String get msgLogoutConfirm => "Are you sure  you want to log out?";
 
   @override
   String get notLoggedIn => "You're not logged in";
@@ -328,6 +342,30 @@ class LocalizationEN implements Localization {
 
   @override
   String get goToCheckoutText => "Go To Checkout";
+
+  @override
+  String get searchHintText => "Search for clothes...";
+
+  @override
+  String get searchText => "Search";
+
+  @override
+  String get cartText => "Cart";
+
+  @override
+  String get savedItemText => "Saved Items";
+
+  @override
+  String get yourDetailsText => "Your details";
+
+  @override
+  String get myCartText => "My Cart";
+
+  @override
+  String get msgUpdateProfileFailed => "Profile not updated!";
+
+  @override
+  String get registerSuccessful => "Register successful";
 
   // checkout
   @override
@@ -406,7 +444,7 @@ class LocalizationEN implements Localization {
   String get sizeText => "Size:";
 
   @override
-  String get quantityText => "Qty:";
+  String get quantityText => "Qty";
   @override
   String get shippingText => "Shipping:";
 
@@ -455,4 +493,20 @@ class LocalizationEN implements Localization {
 
   @override
   String get itemCountText => "Items";
+
+  @override
+  String get ratingSubmittedMessage => "Rating submitted successfully!";
+
+  @override
+  String get ratingFailedMessage =>
+      "Failed to submit rating. Please try again.";
+
+  @override
+  String get orderHistoryTitle => "Order History";
+
+  @override
+  String get giveRatingText => "Your Rating for this purchase";
+
+  @override
+  String get serverFailError => "Server failed to return payment intent";
 }
