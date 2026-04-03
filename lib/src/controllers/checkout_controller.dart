@@ -4,7 +4,7 @@ import 'package:seabasket/src/apis/apimanagers/checkout_api_manager.dart';
 import 'package:seabasket/src/base/dependencyinjection/locator.dart';
 
 class CheckoutController {
-  Future<void> processStripePayment({
+  Future<bool> processStripePayment({
     required double amount,
     required String name,
     required String email,
@@ -17,7 +17,7 @@ class CheckoutController {
     if (paymentIntent == null ||
         paymentIntent.data.clientSecret == null ||
         paymentIntent.data.paymentIntentId == null) {
-      throw Exception('Payment intent not returned by server');
+      return false;
     }
 
     await Stripe.instance.initPaymentSheet(
@@ -40,8 +40,6 @@ class CheckoutController {
     final confirmSuccess = await locator<CheckoutApiManager>()
         .confirmPaymentApiCall(paymentIntent.data.paymentIntentId!);
 
-    if (!confirmSuccess) {
-      throw Exception('Server failed to confirm the payment');
-    }
+    return confirmSuccess;
   }
 }
