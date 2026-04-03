@@ -16,11 +16,19 @@ class FilterBottomSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+      padding: EdgeInsets.only(
+        left: 20,
+        right: 20,
+        top: 20,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+      ),
+      child: SingleChildScrollView(
+        physics: const ClampingScrollPhysics(),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+
           Divider(
               thickness: 5,
               radius: BorderRadius.circular(40),
@@ -45,6 +53,7 @@ class FilterBottomSheet extends StatelessWidget {
                   size: 24,
                 ),
                 onPressed: () {
+                  // No filter applied — pop with null so home screen skips API call
                   locator<NavigationUtils>().pop();
                 },
               )
@@ -305,9 +314,8 @@ class FilterBottomSheet extends StatelessWidget {
             buttonColor: primaryColor,
             onButtonClick: () {
               context.read<ProductProvider>().applyFilters();
-              locator<ProductController>().resetPage();
-              context.read<ProductProvider>().setProducts([]);
-              locator<NavigationUtils>().pop();
+              // Pop with true — home screen will reload products
+              locator<NavigationUtils>().pop(args: true);
             },
           ),
           const SizedBox(height: 5),
@@ -316,13 +324,15 @@ class FilterBottomSheet extends StatelessWidget {
             child: TextButton(
                 onPressed: () {
                   context.read<ProductProvider>().clearFilters();
-                  locator<NavigationUtils>().pop();
+                  // Pop with true — filters cleared, home screen should reload
+                  locator<NavigationUtils>().pop(args: true);
                 },
                 child: Text(
                   Localization.of().clearFilterText,
                 )),
           )
-        ],
+          ]
+        ),
       ),
     );
   }

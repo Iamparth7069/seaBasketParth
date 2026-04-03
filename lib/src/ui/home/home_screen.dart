@@ -103,7 +103,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void openFilterBottomSheet(BuildContext context) async {
     context.read<ProductProvider>().openFilterSheet();
-    await showModalBottomSheet(
+
+    final result = await showModalBottomSheet<bool>(
       isScrollControlled: true,
       context: context,
       shape: RoundedRectangleBorder(
@@ -113,9 +114,14 @@ class _HomeScreenState extends State<HomeScreen> {
         return const FilterBottomSheet();
       },
     );
-    locator<ProductController>().resetPage();
-    context.read<ProductProvider>().setProducts([]);
-    _fetchProducts();
+
+    // Only reload products if the user actually applied or cleared filters.
+    // If result is null (back pressed / X tapped), skip the API call.
+    if (result == true) {
+      locator<ProductController>().resetPage();
+      context.read<ProductProvider>().setProducts([]);
+      _fetchProducts();
+    }
   }
 
   @override
