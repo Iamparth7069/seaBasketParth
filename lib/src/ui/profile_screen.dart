@@ -58,10 +58,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
         if (!userProvider.isLoggedIn) {
           return const LoginRequiredWidget();
         }
-        return Padding(
-                padding: EdgeInsets.symmetric(
-                    horizontal: context.getWidth(0.05),
-                    vertical: context.getHeight(0.02)),
+        return Form(
+          key: _formKey,
+          child: Padding(
+                  padding: EdgeInsets.symmetric(
+                      horizontal: context.getWidth(0.05),
+                      vertical: context.getHeight(0.02)),
                 child: SingleChildScrollView(
                   child: Column(
                     children: [
@@ -110,16 +112,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ],
                   ),
-                ))
-            .commonScaffold(
-                context: context,
-                title: Localization.of().myDetailsText,
-                centerTitle: true,
-                leading: IconButton(
-                    onPressed: locator<NavigationUtils>().pop,
-                    icon: const Icon(Icons.arrow_back)));
+                )))
+            ;
       },
-    );
+    ).commonScaffold(
+        context: context,
+        title: Localization.of().myDetailsText,
+        centerTitle: true,
+        leading: IconButton(
+            onPressed: locator<NavigationUtils>().pop,
+            icon: const Icon(Icons.arrow_back)));
   }
 
   void _handleSubmit() async {
