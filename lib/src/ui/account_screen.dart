@@ -100,8 +100,12 @@ class _AccountScreenState extends State<AccountScreen> {
           locator<NavigationUtils>().pop();
           // context.read<OrderProvider>().clearOrders();
           locator<AuthController>().logout(context);
-          context.read<BottomNavProvider>().changeTab(0);
-          locator<NavigationUtils>().pushAndRemoveUntil(routeLogin);
+          locator<NavigationUtils>().pushAndRemoveUntil(routeLogin)?.then((_) {
+            locator<NavigationUtils>()
+                .getCurrentContext
+                .read<BottomNavProvider>()
+                .changeTab(0);
+          });
         },
         isCancelEnable: true);
   }
