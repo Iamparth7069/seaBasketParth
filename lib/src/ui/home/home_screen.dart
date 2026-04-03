@@ -57,8 +57,11 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _loadHomeData() async {
-    ProgressDialogUtils.showProgressDialog();
     final provider = context.read<ProductProvider>();
+    // Skip calling API if products are already loaded (e.g. returning from another tab)
+    if (provider.products.isNotEmpty) return;
+
+    ProgressDialogUtils.showProgressDialog();
     final categories = await locator<CategoryController>().getAllCategories();
     final products = await locator<ProductController>().getProducts(
       loadMore: false,
@@ -114,9 +117,6 @@ class _HomeScreenState extends State<HomeScreen> {
         return const FilterBottomSheet();
       },
     );
-
-    // Only reload products if the user actually applied or cleared filters.
-    // If result is null (back pressed / X tapped), skip the API call.
     if (result == true) {
       locator<ProductController>().resetPage();
       context.read<ProductProvider>().setProducts([]);

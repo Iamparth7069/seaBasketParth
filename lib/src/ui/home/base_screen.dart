@@ -33,14 +33,15 @@ class BaseScreen extends StatelessWidget {
       Localization.of().yourDetailsText,
     ];
 
-    return Consumer<BottomNavProvider>(
-      builder: (context, provider, _) {
+    return Consumer2<BottomNavProvider, UserProvider>(
+      builder: (context, provider, userProvider, _) {
         final index = provider.selectedIndex;
         return screens[index].commonScaffold(
           context: context,
           title: titles[index],
           centerTitle: index != 0 ? true : false,
-          leading: (provider.selectedIndex == 1 && provider.fromHomeSearch)
+          leading: ((index == 1 && provider.fromHomeSearch) ||
+                  (index == 3 && !userProvider.isLoggedIn))
               ? IconButton(
                   onPressed: () {
                     provider.changeTab(0);
@@ -50,19 +51,13 @@ class BaseScreen extends StatelessWidget {
               : null,
           actions: index == 1
               ? [
-                  Consumer<UserProvider>(
-                    builder: (context, userProvider, child) {
-                      if (!userProvider.isLoggedIn) {
-                        return IconButton(
-                          onPressed: () {
-                            locator<NavigationUtils>().push(routeLogin);
-                          },
-                          icon: const Icon(Icons.login),
-                        );
-                      }
-                      return const SizedBox();
-                    },
-                  )
+                  if (!userProvider.isLoggedIn)
+                    IconButton(
+                      onPressed: () {
+                        locator<NavigationUtils>().push(routeLogin);
+                      },
+                      icon: const Icon(Icons.login),
+                    )
                 ]
               : null,
           bottomNavigationBar: BottomNavigationBar(
