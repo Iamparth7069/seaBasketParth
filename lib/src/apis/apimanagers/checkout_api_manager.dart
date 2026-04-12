@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:seabasket/src/apis/api_route_constant.dart';
 import 'package:seabasket/src/apis/api_service.dart';
 import 'package:seabasket/src/base/dependencyinjection/locator.dart';
@@ -8,24 +9,18 @@ class CheckoutApiManager {
       double amount) async {
     final response = await locator<ApiService>().post(
       apiPaymentIntent,
-      data: {
-        "amount": amount,
-      },
+      data: {paramAmount: amount},
     );
-
-    if (response != null) {
-      return ResPaymentIntentModel.fromJson(response.data);
-    }
-    return null;
+    return ResPaymentIntentModel.fromJson(response!.data);
   }
 
-  Future<bool> confirmPaymentApiCall(String paymentIntentId) async {
+  Future<Response> confirmPaymentApiCall(String paymentIntentId) async {
     final response = await locator<ApiService>().post(
       apiConfirmPayment,
       params: {
-        "payment_intent_id": paymentIntentId,
+        paramPaymentIntentId: paymentIntentId,
       },
     );
-    return response != null && response.statusCode == 200;
+    return response!;
   }
 }

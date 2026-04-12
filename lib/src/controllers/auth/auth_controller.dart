@@ -9,20 +9,22 @@ import 'package:seabasket/src/models/request/req_forgot_password_model.dart';
 import 'package:seabasket/src/models/request/req_login_model.dart';
 import 'package:seabasket/src/models/request/req_register_model.dart';
 import 'package:seabasket/src/models/request/req_reset_password_model.dart';
+import 'package:seabasket/src/models/request/req_update_profile_model.dart';
+import 'package:seabasket/src/models/request/req_user_model.dart';
 import 'package:seabasket/src/models/request/req_verify_otp_model.dart';
 import 'package:seabasket/src/models/user.dart';
 import 'package:seabasket/src/providers/user_provider.dart';
 
 class AuthController {
-  Future<User?> register(BuildContext context, User user) async {
+  Future<User?> register(BuildContext context, ReqUserModel user) async {
     final request = ReqRegisterModel(user: user);
     ProgressDialogUtils.showProgressDialog();
     final response = await locator<AuthApiManager>().registerApiCall(request);
     final registeredUser = response.data;
     if (registeredUser != null) {
       setString(prefkeyUserEmail, registeredUser.email);
-      setString(prefkeyUserName, user.username ?? "");
-      setString(prefkeyUserPhoneNumber, user.phoneNumber ?? "");
+      setString(prefkeyUserName, registeredUser.username ?? "");
+      setString(prefkeyUserPhoneNumber, registeredUser.phoneNumber ?? "");
       context.read<UserProvider>().setUser(registeredUser);
       return registeredUser;
     }
@@ -30,34 +32,32 @@ class AuthController {
     return null;
   }
 
-  Future<User?> login(
-      BuildContext context, String email, String password) async {
-    final request = ReqLoginModel(username: email, password: password);
+  Future<User?> login(BuildContext context, ReqLoginModel request) async {
     ProgressDialogUtils.showProgressDialog();
-    final response = await locator<AuthApiManager>().loginApiCall(request);
-    ProgressDialogUtils.dismissProgressDialog();
-    if (response.access_token != null) {
-      setString(prefkeyToken, response.access_token ?? "");
-      setString(prefkeyUserEmail, response.email ?? "");
-      setBool(prefkeyIsOtpVerified, false);
-      final user = User(
-        email: response.email ?? "",
-      );
-      context.read<UserProvider>().setUser(user);
-      ProgressDialogUtils.dismissProgressDialog();
-      return user;
-    }
 
-    return null;
+    return locator<AuthApiManager>().loginApiCall(request).whenComplete(() {
+      ProgressDialogUtils.dismissProgressDialog();
+    }).then((response) {
+      final loginData = response.data;
+      if (loginData?.accessToken != null) {
+        setString(prefkeyToken, loginData?.accessToken ?? "");
+        setString(prefkeyUserEmail, loginData?.email ?? "");
+        setBool(prefkeyIsOtpVerified, false);
+
+        final user = User(email: loginData?.email ?? "");
+        context.read<UserProvider>().setUser(user);
+        return user;
+      }
+      return null;
+    });
   }
 
-  Future<bool> verifyOtp(BuildContext context, String enteredOtp) async {
-    final request = ReqVerifyOtpModel(OTP: enteredOtp);
-    ProgressDialogUtils.showProgressDialog();
+  Future<bool> verifyOtp(
+      BuildContext context, ReqVerifyOtpModel request) async {
     final response = await locator<AuthApiManager>().verifyOtpApiCall(request);
     ProgressDialogUtils.dismissProgressDialog();
-    if (response.access_token != null) {
-      setString(prefkeyToken, response.access_token ?? "");
+    if (response.data?.accessToken != null) {
+      setString(prefkeyToken, response.data?.accessToken ?? "");
       setBool(prefkeyIsLogin, true);
       setBool(prefkeyIsOtpVerified, true);
       return true;
@@ -65,39 +65,29 @@ class AuthController {
     return false;
   }
 
-  Future<bool> forgotPassword(BuildContext context, String email) async {
-    final request = ReqForgotPasswordModel(email: email);
-    ProgressDialogUtils.showProgressDialog();
+  Future<bool> forgotPassword(
+      BuildContext context, ReqForgotPasswordModel request) async {
     final response =
         await locator<AuthApiManager>().forgotPasswordApiCall(request);
-    ProgressDialogUtils.dismissProgressDialog();
-    if (response.access_token != null) {
-      setString(prefkeyToken, response.access_token ?? "");
+    if (response.data?.accessToken != null) {
+      setString(prefkeyToken, response.data?.accessToken ?? "");
       return true;
     }
     return false;
   }
 
-  Future<bool> resetPassword(BuildContext context, String newPassword) async {
-    final request = ReqResetPasswordModel(password: newPassword);
-    ProgressDialogUtils.showProgressDialog();
-
+  Future<bool> resetPassword(
+      BuildContext context, ReqResetPasswordModel request) async {
     final response =
         await locator<AuthApiManager>().resetPasswordApiCall(request);
     ProgressDialogUtils.dismissProgressDialog();
-    if (response == null) return false;
     return response.message != null;
   }
 
   Future<User?> updateProfile(
-    BuildContext context, {
-    String? phone,
-    String? address,
-  }) async {
-    final request = (phone != null || address != null)
-        ? User(email: "", phoneNumber: phone, address: address)
-        : null;
-
+    BuildContext context,
+    ReqUpdateProfileModel request,
+  ) async {
     ProgressDialogUtils.showProgressDialog();
     final response =
         await locator<AuthApiManager>().updateProfileApiCall(request);
@@ -105,21 +95,15 @@ class AuthController {
     final updatedUser = response.data;
     ProgressDialogUtils.dismissProgressDialog();
     if (updatedUser == null) return null;
-    if (phone != null) {
-      setString(prefkeyUserPhoneNumber, updatedUser.phoneNumber ?? "");
-    }
-    if (address != null) {
-      setString(prefkeyUserAddress, updatedUser.address ?? "");
-    }
-
+    setString(prefkeyUserPhoneNumber, updatedUser.phoneNumber ?? "");
+    setString(prefkeyUserAddress, updatedUser.address ?? "");
     context.read<UserProvider>().setUser(updatedUser);
 
     return updatedUser;
   }
 
   Future<void> logout(BuildContext context) async {
-    final userProvider = context.read<UserProvider>();
     await clear();
-    userProvider.clearUser();
+    context.read<UserProvider>().clearUser();
   }
 }

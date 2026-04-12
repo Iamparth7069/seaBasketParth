@@ -13,7 +13,6 @@ import 'package:seabasket/src/base/utils/navigation_utils.dart';
 import 'package:seabasket/src/base/utils/progress_dialog_utils.dart';
 import 'package:seabasket/src/controllers/category_controller.dart';
 import 'package:seabasket/src/controllers/product_controller.dart';
-import 'package:seabasket/src/models/category/category_model.dart';
 import 'package:seabasket/src/models/product/product_model.dart';
 import 'package:seabasket/src/providers/bottom_nav_provider.dart';
 import 'package:seabasket/src/providers/category_provider.dart';
@@ -42,28 +41,16 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _scrollController.addListener(
-      () {
-        final productController = locator<ProductController>();
-        if (_scrollController.position.pixels >=
-            _scrollController.position.maxScrollExtent - 200) {
-          if (productController.hasMore && !productController.isLoading) {
-            _fetchProducts(loadMore: true);
-          }
-        }
-      },
-    );
+
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadHomeData());
   }
 
   Future<void> _loadHomeData() async {
-    final provider = context.read<ProductProvider>();
-    // Skip calling API if products are already loaded (e.g. returning from another tab)
-    if (provider.products.isNotEmpty) return;
-
     ProgressDialogUtils.showProgressDialog();
+    final provider = context.read<ProductProvider>();
     final categories = await locator<CategoryController>().getAllCategories();
-    final products = await locator<ProductController>().getProducts(
+    await locator<ProductController>().getProducts(
+      provider: provider,
       loadMore: false,
       categoryId: provider.selectedCategoryId,
       minPrice: provider.priceRange.start,
@@ -76,18 +63,15 @@ class _HomeScreenState extends State<HomeScreen> {
     if (categories != null) {
       context.read<CategoryProvider>().setCategories(categories);
     }
-    if (products != null) context.read<ProductProvider>().setProducts(products);
     ProgressDialogUtils.dismissProgressDialog();
   }
 
   Future<void> _fetchProducts({bool loadMore = false}) async {
-    final controller = locator<ProductController>();
     final provider = context.read<ProductProvider>();
-    if (!loadMore) {
-      ProgressDialogUtils.showProgressDialog();
-    }
+    if (provider.isLoading) return;
 
-    final result = await controller.getProducts(
+    await locator<ProductController>().getProducts(
+      provider: provider,
       loadMore: loadMore,
       categoryId: provider.selectedCategoryId,
       minPrice: provider.priceRange.start,
@@ -96,18 +80,13 @@ class _HomeScreenState extends State<HomeScreen> {
       discounts: provider.selectedDiscounts,
       sort: _sortOptions[provider.selectedSortIndex],
     );
-
-    ProgressDialogUtils.dismissProgressDialog();
-    if (result != null && mounted && result.isNotEmpty) {
-      context.read<ProductProvider>().setProducts(result, append: loadMore);
-    }
-    provider.updateHasMore(controller.hasMore);
   }
 
   void openFilterBottomSheet(BuildContext context) async {
-    context.read<ProductProvider>().openFilterSheet();
+    final provider = context.read<ProductProvider>();
+    locator<ProductController>().openFilters(provider);
 
-    final result = await showModalBottomSheet<bool>(
+    await showModalBottomSheet(
       isScrollControlled: true,
       context: context,
       shape: RoundedRectangleBorder(
@@ -117,11 +96,8 @@ class _HomeScreenState extends State<HomeScreen> {
         return const FilterBottomSheet();
       },
     );
-    if (result == true) {
-      locator<ProductController>().resetPage();
-      context.read<ProductProvider>().setProducts([]);
-      _fetchProducts();
-    }
+    locator<ProductController>().applyFilterAndRefresh(provider);
+    _fetchProducts();
   }
 
   @override
@@ -204,15 +180,13 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               child: InkWell(
                 onTap: () {
-                  categoryProvider.selectCategory(index);
-                  final categoryId =
-                      index == 0 ? null : categories[index - 1].id;
-                  context
-                      .read<ProductProvider>()
-                      .setSelectedCategory(categoryId);
-
-                  locator<ProductController>().resetPage();
-                  context.read<ProductProvider>().setProducts([]);
+                  final productProvider = context.read<ProductProvider>();
+                  locator<CategoryController>().onCategorySelected(
+                    categoryProvider: categoryProvider,
+                    productProvider: productProvider,
+                    index: index,
+                    categoryId: index == 0 ? null : categories[index - 1].id,
+                  );
 
                   _fetchProducts();
                 },
@@ -303,17 +277,16 @@ class _HomeScreenState extends State<HomeScreen> {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(16),
                 child: InkWell(
-                  onTap: () {
-                    locator<NavigationUtils>().push(
-                      routeProductDetails,
-                      arguments: {paramProductId: product.id},
-                    );
-                  },
-                  child: ImageUtils().getBase64Image(
-                    product.imageUrl,
-                    fit: BoxFit.cover,
-                  ),
-                ),
+                    onTap: () {
+                      locator<NavigationUtils>().push(
+                        routeProductDetails,
+                        arguments: {paramProductId: product.id},
+                      );
+                    },
+                    child: ImageUtils(
+                      base64String: product.imageUrl,
+                      fit: BoxFit.cover,
+                    )),
               ),
             ),
           ),
@@ -341,30 +314,9 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(width: 7),
               Text(
-                "-${product.discountPercentage?.round()}%  ${(product.discountedPrice)}",
+                "-${product.discountPercentage?.round()}%",
                 style: const TextStyle(
                   color: discountPriceColor,
-                  fontSize: fontSize12,
-                  fontWeight: fontWeightMedium,
-                  height: 1.4,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(
-            height: 3,
-          ),
-          Row(
-            children: [
-              const Icon(
-                Icons.star_outlined,
-                size: fontSize14,
-                color: fillRatingIconColor,
-              ),
-              Text(
-                "${product.averageRating}",
-                style: const TextStyle(
-                  color: primaryTextColor,
                   fontSize: fontSize12,
                   fontWeight: fontWeightMedium,
                   height: 1.4,

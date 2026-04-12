@@ -9,7 +9,6 @@ import 'package:seabasket/src/base/utils/navigation_utils.dart';
 import 'package:seabasket/src/providers/bottom_nav_provider.dart';
 import 'package:seabasket/src/providers/user_provider.dart';
 import 'package:seabasket/src/ui//home/home_screen.dart';
-import 'package:seabasket/src/ui//home/saved_screen.dart';
 import 'package:seabasket/src/ui//home/search_screen.dart';
 import 'package:seabasket/src/ui/account_screen.dart';
 import 'package:seabasket/src/ui/cart_screen.dart';
@@ -33,15 +32,14 @@ class BaseScreen extends StatelessWidget {
       Localization.of().yourDetailsText,
     ];
 
-    return Consumer2<BottomNavProvider, UserProvider>(
-      builder: (context, provider, userProvider, _) {
+    return Consumer<BottomNavProvider>(
+      builder: (context, provider, _) {
         final index = provider.selectedIndex;
         return screens[index].commonScaffold(
           context: context,
           title: titles[index],
           centerTitle: index != 0 ? true : false,
-          leading: ((index == 1 && provider.fromHomeSearch) ||
-                  (index == 3 && !userProvider.isLoggedIn))
+          leading: (provider.selectedIndex == 1 && provider.fromHomeSearch)
               ? IconButton(
                   onPressed: () {
                     provider.changeTab(0);
@@ -49,15 +47,21 @@ class BaseScreen extends StatelessWidget {
                   icon: const Icon(Icons.arrow_back),
                 )
               : null,
-          actions: index == 1
+          actions: index == 1 || index == 2
               ? [
-                  if (!userProvider.isLoggedIn)
-                    IconButton(
-                      onPressed: () {
-                        locator<NavigationUtils>().push(routeLogin);
-                      },
-                      icon: const Icon(Icons.login),
-                    )
+                  Consumer<UserProvider>(
+                    builder: (context, userProvider, child) {
+                      if (!userProvider.isLoggedIn) {
+                        return IconButton(
+                          onPressed: () {
+                            locator<NavigationUtils>().push(routeLogin);
+                          },
+                          icon: const Icon(Icons.login),
+                        );
+                      }
+                      return const SizedBox();
+                    },
+                  )
                 ]
               : null,
           bottomNavigationBar: BottomNavigationBar(

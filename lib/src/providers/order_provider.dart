@@ -10,7 +10,7 @@ class OrderProvider extends ChangeNotifier {
   List<ResMyOrderModel> get historyOrders => _historyOrders;
 
   final Map<int, int> _ratings = {};
-  final Set<int> _clickedProducts = {};
+  final Set<int> _rateProducts = {};
 
   void setMyOrders(List<ResMyOrderModel> orders) {
     _myOrders = orders;
@@ -31,15 +31,15 @@ class OrderProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  bool isClicked(int productId) {
-    return _clickedProducts.contains(productId);
+  bool isRated(int productId) {
+    return _rateProducts.contains(productId);
   }
 
-  void setClicked(int productId, bool value) {
+  void setRated(int productId, bool value) {
     if (value) {
-      _clickedProducts.add(productId);
+      _rateProducts.add(productId);
     } else {
-      _clickedProducts.remove(productId);
+      _rateProducts.remove(productId);
     }
     notifyListeners();
   }

@@ -96,16 +96,6 @@ extension StringExtension on String {
     }
     return null;
   }
-
-  String? isValidOtp({int length = 4}) {
-    if (trim().isEmpty) {
-      return Localization.of().otpRequiredMessage;
-    }
-    if (trim().length != length) {
-      return Localization.of().invalidOtp;
-    }
-    return null;
-  }
 }
 
 extension ColorExtension on Color {

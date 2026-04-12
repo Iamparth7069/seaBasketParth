@@ -1,23 +1,15 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:seabasket/src/apis/apimanagers/product_api_manager.dart';
 import 'package:seabasket/src/base/dependencyinjection/locator.dart';
 import 'package:seabasket/src/base/utils/enum_utils.dart';
 import 'package:seabasket/src/models/product/product_model.dart';
 import 'package:seabasket/src/models/response/res_product_detail_model.dart';
+import 'package:seabasket/src/providers/bottom_nav_provider.dart';
+import 'package:seabasket/src/providers/product_provider.dart';
 import '../base/utils/progress_dialog_utils.dart';
 
 class ProductController {
-  int _page = 1;
-  int _pageSize = 10;
-  bool _hasMore = true;
-  bool _isLoading = false;
-  bool get isLoading => _isLoading;
-  bool get hasMore => _hasMore;
-
-  void resetPage() {
-    _page = 1;
-    _hasMore = true;
-  }
-
   double? _getMinDiscount(Set<int> discounts) {
     if (discounts.isEmpty) return null;
 
@@ -25,6 +17,7 @@ class ProductController {
   }
 
   Future<List<ProductModel>?> getProducts({
+    required ProductProvider provider,
     bool loadMore = false,
     int? categoryId,
     String? name,
@@ -34,50 +27,110 @@ class ProductController {
     Set<int>? discounts,
     ProductSortType? sort,
   }) async {
-
-    final isSearchQuery = name != null && name.trim().isNotEmpty;
-    if (isSearchQuery && !loadMore) {
-      _isLoading = false;
-      resetPage(); // sets _hasMore = true, _page = 1
-    }
-
-    if (_isLoading || !_hasMore) return [];
-    _isLoading = true;
-
+    if (provider.isLoading) return [];
+    provider.setLoading(true);
     if (!loadMore) {
-      resetPage();
+      provider.resetPage();
+      provider.clearProducts();
     }
 
     final minDiscount = _getMinDiscount(discounts ?? {});
     final result = await locator<ProductApiManager>().getProductsApiCall(
-      page: _page,
-      pageSize: _pageSize,
+      page: provider.page,
+      pageSize: provider.pageSize,
       categoryId: (categoryId != null && categoryId != 0) ? categoryId : null,
-      name: (name != null && name.trim().isNotEmpty) ? name : null,
+      name: (name != null && name.trim().isNotEmpty) ? name.trim() : null,
       minPrice: (minPrice != null && minPrice > 0) ? minPrice : null,
       maxPrice: (maxPrice != null && maxPrice < 2000) ? maxPrice : null,
       discount: minDiscount,
       minRating: (minRating != null && minRating > 0) ? minRating : null,
       sort: sort?.displayValue,
     );
+
     if (result != null && result.isNotEmpty) {
-      if (result.length < _pageSize) {
-        _hasMore = false;
+      provider.setProducts(
+        result,
+        append: loadMore,
+      );
+
+      if (result.length < provider.pageSize) {
+        provider.updateHasMore(false);
       } else {
-        _page++;
+        provider.incrementPage();
       }
     } else {
-      _hasMore = false;
+      provider.updateHasMore(false);
     }
-    _isLoading = false;
+    provider.setLoading(false);
     return result ?? [];
   }
 
-  Future<ResProductDetailModel?> getProductById(int productId) async {
+  Future<ResProductDetailModel?> getProductById(
+      BuildContext context, int productId) async {
     ProgressDialogUtils.showProgressDialog();
     final response =
         await locator<ProductApiManager>().getProductByIdApiCall(productId);
     ProgressDialogUtils.dismissProgressDialog();
+    if (response != null) {
+      context.read<ProductProvider>().setSelectedProduct(response);
+    }
     return response;
+  }
+
+  void onSizeSelected(BuildContext context, int index) {
+    context.read<ProductProvider>().selectSize(index);
+  }
+
+  void openFilters(ProductProvider provider) {
+    provider.openFilterSheet();
+  }
+
+  void applyFilterAndRefresh(ProductProvider provider) {
+    provider.resetPage();
+    provider.clearProducts();
+  }
+
+  Future<void> searchProducts({
+    required ProductProvider provider,
+    required String query,
+  }) async {
+    provider.setSearchQuery(query);
+
+    await getProducts(
+      provider: provider,
+      name: query.trim(),
+      loadMore: false,
+    );
+  }
+
+  void goToCart(BuildContext context) {
+    context.read<BottomNavProvider>().changeTab(2);
+  }
+
+  void onSortSelected(BuildContext context, int index) {
+    context.read<ProductProvider>().selectSort(index);
+  }
+
+  void onPriceChanged(BuildContext context, RangeValues value) {
+    context.read<ProductProvider>().updatePriceRange(value);
+  }
+
+  void onRatingSelected(BuildContext context, double? rating) {
+    context.read<ProductProvider>().selectRating(rating);
+  }
+
+  void onDiscountToggle(BuildContext context, int discount) {
+    context.read<ProductProvider>().toggleDiscount(discount);
+  }
+
+  void applyFilters(BuildContext context) {
+    final provider = context.read<ProductProvider>();
+    provider.applyFilters();
+    provider.resetPage();
+    provider.clearProducts();
+  }
+
+  void clearFilters(BuildContext context) {
+    context.read<ProductProvider>().clearFilters();
   }
 }

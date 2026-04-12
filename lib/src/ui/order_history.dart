@@ -8,17 +8,17 @@ import 'package:seabasket/src/base/utils/constants/fontsize_constant.dart';
 import 'package:seabasket/src/base/utils/enum_utils.dart';
 import 'package:seabasket/src/base/utils/image_utils.dart';
 import 'package:seabasket/src/base/utils/localization/localization.dart';
+import 'package:seabasket/src/base/utils/navigation_utils.dart';
 import 'package:seabasket/src/controllers/order_controller.dart';
 import 'package:seabasket/src/models/request/req_add_rating_model.dart';
+import 'package:seabasket/src/models/request/req_my_orders_model.dart';
 import 'package:seabasket/src/models/response/res_my_order_model.dart';
 import 'package:provider/provider.dart';
 import 'package:seabasket/src/providers/order_provider.dart';
 
 class OrderHistory extends StatefulWidget {
   final int? orderId;
-
   const OrderHistory({super.key, this.orderId});
-
   @override
   State<OrderHistory> createState() => _OrderHistoryScreenState();
 }
@@ -35,14 +35,8 @@ class _OrderHistoryScreenState extends State<OrderHistory> {
   }
 
   Future<void> _fetchOrderDetail() async {
-    final provider = context.read<OrderProvider>();
-
-    final orders =
-        await locator<OrderController>().getMyOrders(orderId: widget.orderId);
-
-    if (mounted) {
-      provider.setOrderHistory(orders);
-    }
+    await locator<OrderController>()
+        .getMyOrders(context, ReqMyOrdersModel(orderId: widget.orderId));
   }
 
   @override
@@ -58,7 +52,7 @@ class _OrderHistoryScreenState extends State<OrderHistory> {
           title: Localization.of().orderHistoryTitle,
           centerTitle: true,
           leading: IconButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => locator<NavigationUtils>().pop(),
             icon: const Icon(Icons.arrow_back),
           ),
         );
@@ -68,11 +62,11 @@ class _OrderHistoryScreenState extends State<OrderHistory> {
 
   Widget _orderCard(ResMyOrderModel order) {
     final statusValue = order.status?.toLowerCase().trim() ?? "";
-
     final currentStatus = OrderStatus.values.firstWhere(
       (e) => e.value == statusValue,
       orElse: () => OrderStatus.placed,
     );
+    final isDelivered = currentStatus == OrderStatus.delivered;
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -80,7 +74,7 @@ class _OrderHistoryScreenState extends State<OrderHistory> {
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
-            color: order.status?.toLowerCase() == 'delivered'
+            color: isDelivered
                 ? successColor.withAlpha(25)
                 : Colors.black.withAlpha(10),
             blurRadius: 10,
@@ -105,9 +99,7 @@ class _OrderHistoryScreenState extends State<OrderHistory> {
               Text(
                 order.status ?? '',
                 style: TextStyle(
-                  color: order.status?.toLowerCase() == 'delivered'
-                      ? successColor
-                      : primaryColor,
+                  color: isDelivered ? successColor : primaryColor,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -147,13 +139,12 @@ class _OrderHistoryScreenState extends State<OrderHistory> {
       ClipRRect(
         borderRadius: BorderRadius.circular(10),
         child: SizedBox(
-          width: 65,
-          height: 65,
-          child: ImageUtils().getBase64Image(
-            item.image,
-            fit: BoxFit.cover,
-          ),
-        ),
+            width: 65,
+            height: 65,
+            child: ImageUtils(
+              base64String: item.image,
+              fit: BoxFit.cover,
+            )),
       ),
       const SizedBox(width: 12),
       Expanded(
@@ -288,40 +279,18 @@ class _OrderHistoryScreenState extends State<OrderHistory> {
     return Consumer<OrderProvider>(
       builder: (context, provider, child) {
         final selectedRating = provider.getRating(item.productId);
-        final isClicked = provider.isClicked(item.productId);
+        final isRated = provider.isRated(item.productId);
         return Row(
           children: List.generate(5, (index) {
             return IconButton(
-              onPressed: isClicked
+              onPressed: isRated
                   ? null
-                  : () async {
-                      final rating = index + 1;
-                      provider.setClicked(item.productId, true);
-                      provider.setRating(item.productId, rating);
-                      final req = ReqAddRatingModel(
+                  : () {
+                      locator<OrderController>().submitRating(
+                        context: context,
                         productId: item.productId,
-                        comment: "",
-                        rating: rating,
+                        rating: index + 1,
                       );
-                      final success =
-                          await locator<OrderController>().addReview(req);
-                      if (success) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content:
-                                Text(Localization.of().ratingSubmittedMessage),
-                          ),
-                        );
-                      } else {
-                        provider.setRating(item.productId, 0);
-                        provider.setClicked(item.productId, false);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content:
-                                Text(Localization.of().ratingFailedMessage),
-                          ),
-                        );
-                      }
                     },
               icon: Icon(
                 Icons.star,

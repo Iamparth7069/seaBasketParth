@@ -13,6 +13,8 @@ import 'package:seabasket/src/base/utils/localization/localization.dart';
 import 'package:seabasket/src/base/utils/navigation_utils.dart';
 import 'package:seabasket/src/controllers/cart_controller.dart';
 import 'package:seabasket/src/controllers/checkout_controller.dart';
+import 'package:seabasket/src/models/req_stripe_payment.dart';
+import 'package:seabasket/src/models/request/req_update_profile_model.dart';
 import 'package:seabasket/src/providers/cart_provider.dart';
 import 'package:seabasket/src/providers/checkout_provider.dart';
 import 'package:seabasket/src/providers/user_provider.dart';
@@ -33,37 +35,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   late TextEditingController _addressController;
   final NumberFormat _format = NumberFormat.decimalPattern('en_in');
 
-  bool _addressSaved = true;
-
   @override
   void initState() {
     super.initState();
     _addressController = TextEditingController();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      if (!mounted) return;
-      context.read<CheckoutProvider>().resetEditing();
-      _loadAddress();
+      locator<CheckoutController>()
+          .loadCheckoutData(context, _addressController);
     });
-  }
-
-
-  Future<void> _loadAddress() async {
-    if (!mounted) return;
-
-    final userAddress =
-        context.read<UserProvider>().currentUser?.address ?? '';
-    if (userAddress.isNotEmpty) {
-      _addressController.text = userAddress;
-      return;
-    }
-    final cartData =
-        await locator<CartController>().getCartData(modify: true);
-    if (cartData != null && mounted) {
-      if (cartData.deliveryAddress != null &&
-          cartData.deliveryAddress!.isNotEmpty) {
-        _addressController.text = cartData.deliveryAddress!;
-      }
-    }
   }
 
   @override
@@ -86,46 +65,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      Localization.of().deliveryAddressText,
-                      style: const TextStyle(
-                        fontSize: fontSize18,
-                        fontWeight: fontWeightBold,
-                        color: primaryTextColor,
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () async {
-                        if (checkoutProvider.isEditing) {
-                          // --- SAVE tapped ---
-                          final newAddress = _addressController.text.trim();
-                          if (newAddress.isNotEmpty) {
-                            await locator<AuthController>().updateProfile(
-                              context,
-                              address: newAddress,
-                            );
-                          }
-                          _addressSaved = true;
-                        } else {
-                          // --- CHANGE tapped: start a new edit session ---
-                          _addressSaved = false;
-                        }
-                        checkoutProvider.toggleEditing();
-                      },
-                      child: Text(
-                        checkoutProvider.isEditing
-                            ? Localization.of().save
-                            : Localization.of().changeText,
-                        style: const TextStyle(
-                          color: primaryButtonColor,
-                          fontWeight: fontWeightMedium,
-                        ),
-                      ),
-                    ),
-                  ],
+                Text(
+                  Localization.of().deliveryAddressText,
+                  style: const TextStyle(
+                    fontSize: fontSize18,
+                    fontWeight: fontWeightBold,
+                    color: primaryTextColor,
+                  ),
                 ),
                 SizedBox(height: context.getHeight(0.02)),
                 _addressSection(checkoutProvider),
@@ -181,6 +127,28 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           textInputAction: TextInputAction.done,
           validateFunction: (value) =>
               value?.isFieldEmpty(Localization.of().msgAddressEmpty),
+        ),
+        SizedBox(height: context.getHeight(0.01)),
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton(
+            onPressed: () {
+              locator<CheckoutController>().toggleAddressEdit(
+                context: context,
+                provider: checkoutProvider,
+                address: _addressController.text.trim(),
+              );
+            },
+            child: Text(
+              checkoutProvider.isEditing
+                  ? Localization.of().save
+                  : Localization.of().changeText,
+              style: const TextStyle(
+                color: primaryButtonColor,
+                fontWeight: fontWeightMedium,
+              ),
+            ),
+          ),
         ),
       ],
     );
@@ -239,78 +207,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-  Future<void> _handleContinue() async {
+  void _handleContinue() async {
+    if (!_formKey.currentState!.validate()) return;
     FocusScope.of(context).unfocus();
-
-    final checkoutProvider = context.read<CheckoutProvider>();
-    final cartProvider = context.read<CartProvider>();
-    final user = context.read<UserProvider>().currentUser;
-    if (user == null) return;
-
-    final liveAddress = _addressController.text.trim();
-
-    // Validation faqt tyare j karo jyare address saved nathi YA editing chhe
-    if (!_addressSaved || checkoutProvider.isEditing) {
-      if (liveAddress.isEmpty) {
-        // Faqt empty hoy to j validate karo
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(Localization.of().msgAddressEmpty),
-            backgroundColor: errorColor,
-          ),
-        );
-        return;
-      }
-
-      // Address chhe to save karo
-      final updatedUser = await locator<AuthController>().updateProfile(
-        context,
-        address: liveAddress,
-      );
-      if (!mounted) return;
-      if (updatedUser == null) return;
-
-      _addressSaved = true;
-      checkoutProvider.setEditing(false);
-    }
-
-    // Stripe payment aage vadho
-    final double totalAmount = cartProvider.total;
-    final resolvedAddress =
-    liveAddress.isNotEmpty ? liveAddress : (user.address ?? '');
-
-    final success = await locator<CheckoutController>().processStripePayment(
-      amount: totalAmount,
-      name: user.username ?? '',
-      email: user.email,
-      phone: user.phoneNumber ?? '',
-      address: Address(
-        line1: resolvedAddress,
-        line2: '',
-        city: 'Ahemdabad',
-        state: 'Gujarat',
-        postalCode: '400001',
-        country: 'IN',
-      ),
+    locator<CheckoutController>().handleCheckout(
+      context: context,
+      address: _addressController.text.trim(),
     );
-
-    if (!mounted) return;
-
-    if (!success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(Localization.of().paymentFailedText),
-          backgroundColor: errorColor,
-        ),
-      );
-      return;
-    }
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-          content: Text(Localization.of().paymentSuccessText),
-          backgroundColor: successColor),
-    );
-    locator<NavigationUtils>().pushReplacement(routeOrderDetail);
   }
 }

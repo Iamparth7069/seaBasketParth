@@ -16,32 +16,18 @@ class FilterBottomSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 20,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-      ),
-      child: SingleChildScrollView(
-        physics: const ClampingScrollPhysics(),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-
-          Divider(
-              thickness: 5,
-              radius: BorderRadius.circular(40),
-              indent: 130,
-              endIndent: 130,
-              color: secondaryTextColor.withAlpha(50)),
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
                 Localization.of().filterText,
                 style: const TextStyle(
-                  fontSize: fontSize20,
+                  fontSize: fontSize26,
                   color: primaryColor,
                   fontWeight: fontWeightBold,
                 ),
@@ -53,17 +39,14 @@ class FilterBottomSheet extends StatelessWidget {
                   size: 24,
                 ),
                 onPressed: () {
-                  // No filter applied — pop with null so home screen skips API call
                   locator<NavigationUtils>().pop();
                 },
               )
             ],
           ),
           Divider(
-            thickness: 1,
-            indent: 5,
-            endIndent: 5,
-            color: secondaryTextColor.withAlpha(50),
+            thickness: 1.5,
+            color: Colors.grey[400],
           ),
           Text(
             Localization.of().sortByText,
@@ -96,10 +79,11 @@ class FilterBottomSheet extends StatelessWidget {
                       ),
                       child: InkWell(
                         onTap: () {
-                          productProvider.selectSort(index);
+                          locator<ProductController>()
+                              .onSortSelected(context, index);
                         },
                         child: Text(
-                          ProductSortType.values[index].value,
+                          ProductSortType.values[index].displayValue,
                           style: TextStyle(
                             fontSize: fontSize14,
                             color:
@@ -113,13 +97,7 @@ class FilterBottomSheet extends StatelessWidget {
               );
             },
           ),
-          const SizedBox(height: 10),
-          Divider(
-            thickness: 1,
-            indent: 5,
-            endIndent: 5,
-            color: secondaryTextColor.withAlpha(50),
-          ),
+          const SizedBox(height: 20),
           Consumer<ProductProvider>(
             builder: (context, homeProvider, child) {
               return Row(
@@ -160,16 +138,10 @@ class FilterBottomSheet extends StatelessWidget {
                   productProvider.tempPriceRange.end.round().toString(),
                 ),
                 onChanged: (value) {
-                  productProvider.updatePriceRange(value);
+                  locator<ProductController>().onPriceChanged(context, value);
                 },
               );
             },
-          ),
-          Divider(
-            thickness: 1,
-            indent: 5,
-            endIndent: 5,
-            color: secondaryTextColor.withAlpha(50),
           ),
           Text(
             Localization.of().ratingText,
@@ -184,74 +156,19 @@ class FilterBottomSheet extends StatelessWidget {
               return RadioGroup<double>(
                   groupValue: productProvider.tempRating,
                   onChanged: (value) {
-                    productProvider.selectRating(value);
+                    locator<ProductController>()
+                        .onRatingSelected(context, value);
                   },
                   child: Column(
-                    children: [
-                      RadioListTile<double>(
-                        toggleable: true,
-                        radioSide: const BorderSide(style: BorderStyle.solid),
-                        dense: true,
-                        contentPadding: EdgeInsets.zero,
-                        value: 3.0,
-                        activeColor: primaryColor,
-                        title: Row(
-                          children: [
-                            const Text("3.0"),
-                            const Icon(
-                              Icons.star,
-                              color: Colors.orange,
-                            ),
-                            Text(Localization.of().aboveText)
-                          ],
-                        ),
-                      ),
-                      RadioListTile<double>(
-                        radioSide: const BorderSide(style: BorderStyle.solid),
-                        toggleable: true,
-                        dense: true,
-                        contentPadding: EdgeInsets.zero,
-                        value: 4.0,
-                        activeColor: primaryColor,
-                        title: Row(
-                          children: [
-                            const Text("4.0"),
-                            const Icon(
-                              Icons.star,
-                              color: Colors.orange,
-                            ),
-                            Text(Localization.of().aboveText),
-                          ],
-                        ),
-                      ),
-                      RadioListTile<double>(
-                        radioSide: const BorderSide(style: BorderStyle.solid),
-                        toggleable: true,
-                        dense: true,
-                        contentPadding: EdgeInsets.zero,
-                        value: 5.0,
-                        activeColor: primaryColor,
-                        title: Row(
-                          children: [
-                            const Text("5.0"),
-                            const Icon(
-                              Icons.star,
-                              color: Colors.orange,
-                            ),
-                            Text(Localization.of().aboveText),
-                          ],
-                        ),
-                      )
-                    ],
+                    children: [3.0, 4.0, 5.0]
+                        .map(
+                          (rating) => _buildRating(rating, context),
+                        )
+                        .toList(),
                   ));
             },
           ),
-          Divider(
-            thickness: 1,
-            indent: 5,
-            endIndent: 5,
-            color: secondaryTextColor.withAlpha(50),
-          ),
+          const SizedBox(height: 10),
           Text(
             Localization.of().discountText,
             style: const TextStyle(
@@ -263,44 +180,12 @@ class FilterBottomSheet extends StatelessWidget {
           Consumer<ProductProvider>(
             builder: (context, productProvider, child) {
               return Column(
-                children: [
-                  CheckboxListTile(
-                    value: productProvider.tempDiscounts.contains(10),
-                    onChanged: (value) {
-                      productProvider.toggleDiscount(10);
-                    },
-                    activeColor: primaryColor,
-                    title: Row(children: [
-                      const Text("10%"),
-                      Text(Localization.of().moreText),
-                    ]),
-                    controlAffinity: ListTileControlAffinity.leading,
-                  ),
-                  CheckboxListTile(
-                    value: productProvider.tempDiscounts.contains(20),
-                    onChanged: (value) {
-                      productProvider.toggleDiscount(20);
-                    },
-                    activeColor: primaryColor,
-                    title: Row(children: [
-                      const Text("20%"),
-                      Text(Localization.of().moreText),
-                    ]),
-                    controlAffinity: ListTileControlAffinity.leading,
-                  ),
-                  CheckboxListTile(
-                    value: productProvider.tempDiscounts.contains(40),
-                    onChanged: (value) {
-                      productProvider.toggleDiscount(40);
-                    },
-                    activeColor: primaryColor,
-                    title: Row(children: [
-                      const Text("40%"),
-                      Text(Localization.of().moreText),
-                    ]),
-                    controlAffinity: ListTileControlAffinity.leading,
-                  )
-                ],
+                children: [10, 20, 40]
+                    .map(
+                      (discount) =>
+                          _buildDiscount(productProvider, discount, context),
+                    )
+                    .toList(),
               );
             },
           ),
@@ -313,9 +198,8 @@ class FilterBottomSheet extends StatelessWidget {
             textColor: secondaryColor,
             buttonColor: primaryColor,
             onButtonClick: () {
-              context.read<ProductProvider>().applyFilters();
-              // Pop with true — home screen will reload products
-              locator<NavigationUtils>().pop(args: true);
+              locator<ProductController>().applyFilters(context);
+              locator<NavigationUtils>().pop();
             },
           ),
           const SizedBox(height: 5),
@@ -323,16 +207,53 @@ class FilterBottomSheet extends StatelessWidget {
             alignment: Alignment.bottomCenter,
             child: TextButton(
                 onPressed: () {
-                  context.read<ProductProvider>().clearFilters();
-                  // Pop with true — filters cleared, home screen should reload
-                  locator<NavigationUtils>().pop(args: true);
+                  locator<ProductController>().clearFilters(context);
+                  locator<NavigationUtils>().pop();
                 },
                 child: Text(
                   Localization.of().clearFilterText,
                 )),
           )
-          ]
-        ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDiscount(
+      ProductProvider productProvider, int discount, BuildContext context) {
+    return CheckboxListTile(
+      value: productProvider.tempDiscounts.contains(discount),
+      onChanged: (value) {
+        locator<ProductController>().onDiscountToggle(context, discount);
+      },
+      activeColor: primaryColor,
+      title: Row(
+        children: [
+          Text("$discount%"),
+          Text(Localization.of().moreText),
+        ],
+      ),
+      controlAffinity: ListTileControlAffinity.leading,
+    );
+  }
+
+  Widget _buildRating(double rating, BuildContext context) {
+    return RadioListTile<double>(
+      radioSide: const BorderSide(style: BorderStyle.solid),
+      toggleable: true,
+      dense: true,
+      contentPadding: EdgeInsets.zero,
+      value: rating,
+      activeColor: primaryColor,
+      title: Row(
+        children: [
+          Text(rating.toStringAsFixed(1)),
+          const Icon(
+            Icons.star,
+            color: Colors.orange,
+          ),
+          Text(Localization.of().aboveText),
+        ],
       ),
     );
   }

@@ -9,6 +9,7 @@ import 'package:seabasket/src/base/utils/constants/image_constant.dart';
 import 'package:seabasket/src/base/utils/image_utils.dart';
 import 'package:seabasket/src/base/utils/localization/localization.dart';
 import 'package:seabasket/src/controllers/cart_controller.dart';
+import 'package:seabasket/src/models/request/req_update_cart_model.dart';
 import 'package:seabasket/src/providers/cart_provider.dart';
 import 'package:seabasket/src/base/dependencyinjection/locator.dart';
 import 'package:seabasket/src/base/utils/navigation_utils.dart';
@@ -16,6 +17,8 @@ import 'package:seabasket/src/base/utils/constants/navigation_route_constants.da
 import 'package:seabasket/src/providers/user_provider.dart';
 import 'package:seabasket/src/widgets/login_required_widget.dart';
 import 'package:seabasket/src/widgets/primary_button.dart';
+
+import '../base/utils/enum_utils.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -30,11 +33,7 @@ class _CartScreenState extends State<CartScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final cartData =
-          await locator<CartController>().getCartData(modify: true);
-      if (cartData != null) {
-        context.read<CartProvider>().setCartItems(cartData);
-      }
+      locator<CartController>().loadCart(context);
     });
   }
 
@@ -122,13 +121,13 @@ class _CartScreenState extends State<CartScreen> {
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
             child: SizedBox(
-              width: 80,
-              height: 80,
-              child: ImageUtils().getBase64Image(
-                item.image,
-                fit: BoxFit.cover,
-              ),
-            ),
+                width: 80,
+                height: 80,
+                child: ImageUtils(
+                  base64String: item.image,
+                  fit: BoxFit.cover,
+                  fillHeight: false,
+                )),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -152,16 +151,12 @@ class _CartScreenState extends State<CartScreen> {
                       ),
                     ),
                     InkWell(
-                        onTap: () async {
-                          final itemId = item.cartItemId;
-                          if (itemId != null) {
-                            cartProvider.removeItem(index);
-                            final data = await locator<CartController>()
-                                .removeFromCart(itemId, true);
-                            if (mounted && data != null) {
-                              context.read<CartProvider>().setCartItems(data);
-                            }
-                          }
+                        onTap: () {
+                          locator<CartController>().removeItem(
+                            context: context,
+                            index: index,
+                            cartItemId: item.cartItemId,
+                          );
                         },
                         child: SvgPicture.asset(deleteIcon)),
                   ],
@@ -191,9 +186,9 @@ class _CartScreenState extends State<CartScreen> {
                         _quantityButton(
                           icon: Icons.remove,
                           onTap: () => locator<CartController>().updateQuantity(
-                            cartProvider: cartProvider,
+                            context: context,
                             index: index,
-                            value: "decrease",
+                            action: CartActionType.decrease,
                           ),
                         ),
                         const SizedBox(width: 16),
@@ -208,9 +203,9 @@ class _CartScreenState extends State<CartScreen> {
                         _quantityButton(
                           icon: Icons.add,
                           onTap: () => locator<CartController>().updateQuantity(
-                            cartProvider: cartProvider,
+                            context: context,
                             index: index,
-                            value: "increase",
+                            action: CartActionType.increase,
                           ),
                         ),
                       ],

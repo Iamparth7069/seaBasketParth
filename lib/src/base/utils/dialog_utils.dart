@@ -17,29 +17,26 @@ void showAlertDialog({
     context: locator<NavigationUtils>().getCurrentContext,
     barrierDismissible: isCancelEnable,
     builder: (dialogContext) {
-      return PopScope(
-        canPop: isCancelEnable,
-        child: child != null
-            ? Dialog(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: child,
-              )
-            : Platform.isIOS
-                ? CupertinoErrorDialog(
-                    message: message ?? '',
-                    okTitle: okButtonTitle,
-                    okFunction: okButtonAction,
-                    isCancelEnable: isCancelEnable,
-                  )
-                : MaterialErrorDialog(
-                    message: message ?? '',
-                    okTitle: okButtonTitle,
-                    okFunction: okButtonAction,
-                    isCancelEnable: isCancelEnable,
-                  ),
-      );
+      return child != null
+          ? Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: child,
+            )
+          : Platform.isIOS
+              ? CupertinoErrorDialog(
+                  message: message ?? '',
+                  okTitle: okButtonTitle,
+                  okFunction: okButtonAction,
+                  isCancelEnable: isCancelEnable,
+                )
+              : MaterialErrorDialog(
+                  message: message ?? '',
+                  okTitle: okButtonTitle,
+                  okFunction: okButtonAction,
+                  isCancelEnable: isCancelEnable,
+                );
     },
   );
 }

@@ -9,11 +9,10 @@ import 'package:seabasket/src/base/utils/constants/fontsize_constant.dart';
 import 'package:seabasket/src/base/utils/constants/navigation_route_constants.dart';
 import 'package:seabasket/src/base/utils/localization/localization.dart';
 import 'package:seabasket/src/base/utils/navigation_utils.dart';
-import 'package:seabasket/src/base/utils/progress_dialog_utils.dart';
 import 'package:seabasket/src/controllers/auth/auth_controller.dart';
+import 'package:seabasket/src/models/request/req_forgot_password_model.dart';
 import 'package:seabasket/src/widgets/primary_button.dart';
 import 'package:seabasket/src/widgets/primary_text_field.dart';
-
 import '../../base/utils/progress_dialog_utils.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
@@ -31,8 +30,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   void _handleSendCode() async {
     if (!_formKey.currentState!.validate()) return;
     final enteredEmail = _emailController.text.trim();
-    final success =
-        await locator<AuthController>().forgotPassword(context, enteredEmail);
+    final success = await locator<AuthController>()
+        .forgotPassword(context, ReqForgotPasswordModel(email: enteredEmail));
     if (success) {
       locator<NavigationUtils>().push(routeOtpVerify,
           arguments: {paramEmail: enteredEmail, paramIsLogin: false});

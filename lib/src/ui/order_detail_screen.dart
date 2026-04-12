@@ -8,15 +8,18 @@ import 'package:seabasket/src/base/utils/constants/color_constant.dart';
 import 'package:seabasket/src/base/utils/constants/fontsize_constant.dart';
 import 'package:seabasket/src/base/utils/constants/navigation_route_constants.dart';
 import 'package:seabasket/src/base/utils/constants/dic_params.dart';
+import 'package:seabasket/src/base/utils/enum_utils.dart';
 import 'package:seabasket/src/base/utils/localization/localization.dart';
 import 'package:seabasket/src/base/utils/navigation_utils.dart';
 import 'package:seabasket/src/controllers/order_controller.dart';
+import 'package:seabasket/src/models/request/req_my_orders_model.dart';
 import 'package:seabasket/src/providers/order_provider.dart';
 import 'package:seabasket/src/providers/user_provider.dart';
 import 'package:seabasket/src/widgets/login_required_widget.dart';
 
 class OrderDetailScreen extends StatefulWidget {
-  const OrderDetailScreen({super.key});
+  int? orderId;
+  OrderDetailScreen({super.key, this.orderId});
 
   @override
   State<OrderDetailScreen> createState() => _OrderDetailScreenState();
@@ -34,10 +37,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   }
 
   Future<void> _fetchOrders() async {
-    final provider = context.read<OrderProvider>();
-    final orders = await locator<OrderController>().getMyOrders();
-
-    provider.setMyOrders(orders);
+    await locator<OrderController>()
+        .getMyOrders(context, ReqMyOrdersModel(orderId: widget.orderId));
   }
 
   @override
@@ -121,8 +122,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(
-                            color: (order.status?.toLowerCase() == 'deliverd' ||
-                                    order.status?.toLowerCase() == 'delivered')
+                            color: order.status?.toLowerCase() ==
+                                    OrderStatus.delivered.value
                                 ? successColor.withAlpha(25)
                                 : primaryColor.withAlpha(25),
                             borderRadius: BorderRadius.circular(20),
@@ -133,12 +134,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                             style: TextStyle(
                               fontSize: fontSize12,
                               fontWeight: fontWeightBold,
-                              color:
-                                  (order.status?.toLowerCase() == 'deliverd' ||
-                                          order.status?.toLowerCase() ==
-                                              'delivered')
-                                      ? successColor
-                                      : primaryColor,
+                              color: order.status?.toLowerCase() ==
+                                      OrderStatus.delivered.value
+                                  ? successColor
+                                  : primaryColor,
                             ),
                           ),
                         ),
@@ -195,7 +194,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       title: Localization.of().orderDetailText,
       centerTitle: true,
       leading: IconButton(
-        onPressed: () => Navigator.pop(context),
+        onPressed: () => locator<NavigationUtils>().pop(),
         icon: const Icon(Icons.arrow_back),
       ),
     );

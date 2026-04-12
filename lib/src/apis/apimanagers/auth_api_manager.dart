@@ -6,6 +6,7 @@ import 'package:seabasket/src/models/request/req_forgot_password_model.dart';
 import 'package:seabasket/src/models/request/req_login_model.dart';
 import 'package:seabasket/src/models/request/req_register_model.dart';
 import 'package:seabasket/src/models/request/req_reset_password_model.dart';
+import 'package:seabasket/src/models/request/req_update_profile_model.dart';
 import 'package:seabasket/src/models/request/req_verify_otp_model.dart';
 import 'package:seabasket/src/models/res_base_model.dart';
 import 'package:seabasket/src/models/response/res_login_model.dart';
@@ -16,7 +17,7 @@ import 'package:seabasket/src/models/user.dart';
 class AuthApiManager {
   Future<ResRegisterModel> registerApiCall(ReqRegisterModel request) async {
     final response = await locator<ApiService>().post(
-      apiRegster,
+      apiRegister,
       data: request.toJson(),
     );
     return ResRegisterModel.fromJson(response!.data);
@@ -25,7 +26,6 @@ class AuthApiManager {
   Future<ResLoginModel> loginApiCall(ReqLoginModel request) async {
     final response = await locator<ApiService>()
         .multipartPost(apiLogin, data: FormData.fromMap(request.toJson()));
-
     return ResLoginModel.fromJson(response!.data);
   }
 
@@ -42,21 +42,18 @@ class AuthApiManager {
     return ResLoginModel.fromJson(response!.data);
   }
 
-  Future<ResBaseModel?> resetPasswordApiCall(
+  Future<ResBaseModel> resetPasswordApiCall(
       ReqResetPasswordModel request) async {
     final response = await locator<ApiService>()
         .patch(apiResetPassword, data: request.toJson());
-    if (response == null) return null;
-    return ResBaseModel.fromJson(response.data);
+    return ResBaseModel.fromJson(response!.data);
   }
 
-  Future<ResUpdateProfileModel> updateProfileApiCall(User? user) async {
+  Future<ResUpdateProfileModel> updateProfileApiCall(
+      ReqUpdateProfileModel request) async {
     final response = await locator<ApiService>().put(
       apiUpdateUser,
-      data: {
-        "phoneNumber": user != null ? user.phoneNumber : "",
-        "address": user != null ? user.address : "",
-      },
+      data: request.toJson(),
     );
     return ResUpdateProfileModel.fromJson(response!.data);
   }

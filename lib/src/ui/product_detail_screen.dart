@@ -41,11 +41,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   }
 
   Future<void> _loadProduct() async {
-    final response =
-        await locator<ProductController>().getProductById(widget.productId);
-    if (response != null && mounted) {
-      context.read<ProductProvider>().setSelectedProduct(response);
-    }
+    await locator<ProductController>()
+        .getProductById(context, widget.productId);
   }
 
   @override
@@ -54,11 +51,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         context.select<ProductProvider, ResProductDetailModel?>(
       (p) => p.selectedProduct,
     );
-    if (productDetail == null || productDetail.product == null) {
+    if (productDetail?.data == null) {
       return const Center(child: CircularProgressIndicator());
     }
-    final product = productDetail.product!;
-    final size = productDetail.available_sizes;
+    final product = productDetail!.data!.product!;
+    final size = productDetail.data?.availableSizes ?? [];
 
     return Column(
       children: [
@@ -71,7 +68,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 children: [
                   _productImage(product),
                   const SizedBox(height: 10),
-                  _productInfo(product, size),
+                  _productInfo(product, size!),
                   const SizedBox(height: 2),
                   Text(
                     Localization.of().priceText,
@@ -110,21 +107,20 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
   Widget _productImage(ProductModel product) {
     return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: const Color(0xFFF5F5F5),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: ImageUtils().getBase64Image(
-        product.imageUrl,
-        fit: BoxFit.fitWidth,
-        fillHeight: false,
-      ),
-    );
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: const Color(0xFFF5F5F5),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: ImageUtils(
+          base64String: product.imageUrl,
+          fit: BoxFit.cover,
+          fillHeight: false,
+        ));
   }
 
-  Widget _productInfo(ProductModel product, List<String?> size) {
+  Widget _productInfo(ProductModel product, List<String> size) {
     return Consumer<ProductProvider>(
       builder: (context, productProvider, child) {
         return Column(
@@ -166,7 +162,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 final isSelected = productProvider.selectedSizeIndex == index;
                 return GestureDetector(
                   onTap: () {
-                    productProvider.selectSize(index);
+                    locator<ProductController>().onSizeSelected(context, index);
                   },
                   child: Container(
                     margin: const EdgeInsets.only(right: 10, bottom: 10),
@@ -182,7 +178,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                               : containerBorderColor),
                     ),
                     child: Text(
-                      size[index] ?? '',
+                      size[index],
                       style: TextStyle(
                           fontSize: fontSize20,
                           color: isSelected ? secondaryColor : primaryTextColor,
@@ -198,7 +194,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     );
   }
 
-  Widget _bottomSection(ProductModel product, List<String?> size) {
+  Widget _bottomSection(ProductModel product, List<String> size) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: const BoxDecoration(
@@ -228,7 +224,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     }
                     if (isAlreadyInCart) {
                       locator<NavigationUtils>().pop();
-                      context.read<BottomNavProvider>().changeTab(2);
+                      locator<ProductController>().goToCart(context);
                     } else {
                       await _handleAddToCart(product, selectedSize);
                     }
@@ -278,32 +274,15 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     ProductModel product,
     String? selectedSize,
   ) async {
-    final productProvider = context.read<ProductProvider>();
-    if (productProvider.isAddingToCart) return;
-    productProvider.setAddingToCart(true);
-    final result = await locator<CartController>().addToCart(
-      ReqCartModel(
-        productId: product.id!,
-        size: selectedSize ?? "",
-        quantity: 1,
-      ),
+    final success = await locator<CartController>().addProductToCart(
+      context: context,
+      product: product,
+      size: selectedSize,
     );
 
     if (!mounted) return;
 
-    if (result != null) {
-      context.read<CartProvider>().addItem(
-            CartModel(
-              productId: result.productId ?? product.id,
-              size: result.size ?? selectedSize,
-              quantity: result.quantity ?? 1,
-              cartItemId: result.cartItemId,
-              productName: product.name,
-              effectivePrice: product.discountedPrice ?? product.price ?? 0.0,
-              image: product.imageUrl,
-            ),
-          );
-
+    if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -313,6 +292,5 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         ),
       );
     }
-    productProvider.setAddingToCart(false);
   }
 }

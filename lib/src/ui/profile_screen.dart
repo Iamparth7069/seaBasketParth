@@ -8,6 +8,7 @@ import 'package:seabasket/src/base/utils/constants/color_constant.dart';
 import 'package:seabasket/src/base/utils/localization/localization.dart';
 import 'package:seabasket/src/base/utils/navigation_utils.dart';
 import 'package:seabasket/src/controllers/auth/auth_controller.dart';
+import 'package:seabasket/src/models/request/req_update_profile_model.dart';
 import 'package:seabasket/src/providers/user_provider.dart';
 import 'package:seabasket/src/widgets/login_required_widget.dart';
 import 'package:seabasket/src/widgets/primary_button.dart';
@@ -31,7 +32,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await locator<AuthController>().updateProfile(context);
+      // await locator<AuthController>().updateProfile(context);
       final user = context.read<UserProvider>().currentUser;
       if (user != null) {
         _fullNameController.text = user.username ?? "";
@@ -58,91 +59,82 @@ class _ProfileScreenState extends State<ProfileScreen> {
         if (!userProvider.isLoggedIn) {
           return const LoginRequiredWidget();
         }
-        return Form(
-          key: _formKey,
-          child: Padding(
-                  padding: EdgeInsets.symmetric(
-                      horizontal: context.getWidth(0.05),
-                      vertical: context.getHeight(0.02)),
+        return Padding(
+                padding: EdgeInsets.symmetric(
+                    horizontal: context.getWidth(0.05),
+                    vertical: context.getHeight(0.02)),
                 child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      PrimaryTextField(
-                        label: Localization.of().fullNameText,
-                        hint: "",
-                        controller: _fullNameController,
-                        readOnly: true,
-                        textInputAction: TextInputAction.next,
-                      ),
-                      const SizedBox(height: 14),
-                      PrimaryTextField(
-                        label: Localization.of().emailLabel,
-                        hint: "",
-                        controller: _emailController,
-                        readOnly: true,
-                        textInputAction: TextInputAction.next,
-                      ),
-                      const SizedBox(height: 14),
-                      PrimaryTextField(
-                        label: Localization.of().phoneNumberText,
-                        hint: Localization.of().phoneNumberHint,
-                        controller: _phoneController,
-                        type: TextInputType.phone,
-                        textInputAction: TextInputAction.next,
-                        validateFunction: (value) =>
-                            value?.isValidPhoneNumber(),
-                      ),
-                      const SizedBox(height: 14),
-                      PrimaryTextField(
-                        label: Localization.of().addressText,
-                        hint: Localization.of().addressHint,
-                        controller: _addressController,
-                        maxLines: 3,
-                        textInputAction: TextInputAction.done,
-                        validateFunction: (value) => value?.isFieldEmpty(
-                          Localization.of().msgAddressEmpty,
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      children: [
+                        PrimaryTextField(
+                          label: Localization.of().fullNameText,
+                          hint: "",
+                          controller: _fullNameController,
+                          readOnly: true,
+                          textInputAction: TextInputAction.next,
                         ),
-                      ),
-                      const SizedBox(height: 20),
-                      PrimaryButton(
-                        buttonText: Localization.of().submitText,
-                        buttonColor: primaryButtonColor,
-                        backgroundColor: primaryButtonColor,
-                        onButtonClick: () => _handleSubmit(),
-                      ),
-                    ],
+                        const SizedBox(height: 14),
+                        PrimaryTextField(
+                          label: Localization.of().emailLabel,
+                          hint: "",
+                          controller: _emailController,
+                          readOnly: true,
+                          textInputAction: TextInputAction.next,
+                        ),
+                        const SizedBox(height: 14),
+                        PrimaryTextField(
+                          label: Localization.of().phoneNumberText,
+                          hint: Localization.of().phoneNumberHint,
+                          controller: _phoneController,
+                          type: TextInputType.phone,
+                          textInputAction: TextInputAction.next,
+                          validateFunction: (value) =>
+                              value?.isValidPhoneNumber(),
+                        ),
+                        const SizedBox(height: 14),
+                        PrimaryTextField(
+                          label: Localization.of().addressText,
+                          hint: Localization.of().addressHint,
+                          controller: _addressController,
+                          maxLines: 3,
+                          textInputAction: TextInputAction.done,
+                          validateFunction: (value) => value?.isFieldEmpty(
+                            Localization.of().msgAddressEmpty,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        PrimaryButton(
+                          buttonText: Localization.of().submitText,
+                          buttonColor: primaryButtonColor,
+                          backgroundColor: primaryButtonColor,
+                          onButtonClick: () => _handleSubmit(),
+                        ),
+                      ],
+                    ),
                   ),
-                )))
-            ;
+                ))
+            .commonScaffold(
+                context: context,
+                title: Localization.of().myDetailsText,
+                centerTitle: true,
+                leading: IconButton(
+                    onPressed: locator<NavigationUtils>().pop,
+                    icon: const Icon(Icons.arrow_back)));
       },
-    ).commonScaffold(
-        context: context,
-        title: Localization.of().myDetailsText,
-        centerTitle: true,
-        leading: IconButton(
-            onPressed: locator<NavigationUtils>().pop,
-            icon: const Icon(Icons.arrow_back)));
+    );
   }
 
   void _handleSubmit() async {
     FocusScope.of(context).unfocus();
     if (!_formKey.currentState!.validate()) return;
-
-    final updatedUser = await locator<AuthController>().updateProfile(
+    await locator<AuthController>().updateProfile(
       context,
-      phone: _phoneController.text,
-      address: _addressController.text,
+      ReqUpdateProfileModel(
+        phoneNumber: _phoneController.text.trim(),
+        address: _addressController.text.trim(),
+      ),
     );
-
-    if (updatedUser != null && mounted) {
-      context.read<UserProvider>().setUser(updatedUser);
-
-      _phoneController.text = updatedUser.phoneNumber ?? "";
-      _addressController.text = updatedUser.address ?? "";
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(Localization.of().profileUpdateMessage)),
-      );
-    }
   }
 }

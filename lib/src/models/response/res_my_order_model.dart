@@ -30,5 +30,12 @@ class ResMyOrderModel {
   factory ResMyOrderModel.fromJson(Map<String, dynamic> json) =>
       _$ResMyOrderModelFromJson(json);
 
+  static List<ResMyOrderModel> listFromData(Map<String, dynamic> json) {
+    final dataList = json['data'] as List? ?? [];
+    return dataList
+        .map((e) => ResMyOrderModel.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
   Map<String, dynamic> toJson() => _$ResMyOrderModelToJson(this);
 }

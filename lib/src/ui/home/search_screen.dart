@@ -14,19 +14,13 @@ import 'package:seabasket/src/widgets/primary_text_field.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
+
   @override
   State<SearchScreen> createState() => _SearchScreenState();
 }
 
 class _SearchScreenState extends State<SearchScreen> {
   final searchController = TextEditingController();
-  String _activeQuery = '';
-
-  @override
-  void dispose() {
-    searchController.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +30,7 @@ class _SearchScreenState extends State<SearchScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: _getSearchbarTextField(),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         Expanded(child: _searchResult()),
       ],
     );
@@ -45,34 +39,12 @@ class _SearchScreenState extends State<SearchScreen> {
   Widget _getSearchbarTextField() {
     return PrimaryTextField(
       autoFocus: true,
-      onChanged: (value) async {
+      onChanged: (value) {
         final provider = context.read<ProductProvider>();
-        final query = value.trim();
-
-        _activeQuery = query;
-        provider.setSearchQuery(query);
-
-        if (query.isEmpty) {
-          provider.setProducts([]);
-          provider.setSearching(false);
-          return;
-        }
-
-        provider.setSearching(true);
-
-        final result =
-            await locator<ProductController>().getProducts(name: query);
-
-        // Discard result if the user has already typed something newer
-        if (_activeQuery != query) return;
-
-        provider.setSearching(false);
-
-        if (result != null) {
-          provider.setProducts(result);
-        } else {
-          provider.setProducts([]);
-        }
+        locator<ProductController>().searchProducts(
+          provider: provider,
+          query: value,
+        );
       },
       controller: searchController,
       label: "",
@@ -85,30 +57,18 @@ class _SearchScreenState extends State<SearchScreen> {
   Widget _searchResult() {
     return Consumer<ProductProvider>(
       builder: (context, productProvider, child) {
-        if (productProvider.isSearching) {
-          return const Center(child: CircularProgressIndicator());
-        }
         if (productProvider.searchQuery.trim().isEmpty) {
           return Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.search_outlined,
-                  size: 48, color: secondaryIconColor),
+              const Icon(Icons.search, size: 48, color: secondaryIconColor),
               const SizedBox(height: 12),
               Text(
-                Localization.of().noResultFoundText,
+                Localization.of().searchText,
                 style: const TextStyle(
                   fontSize: fontSize18,
                   color: primaryTextColor,
                   fontWeight: fontWeightSemiBold,
-                ),
-              ),
-              Text(
-                Localization.of().noResultFoundSubText,
-                style: const TextStyle(
-                  fontSize: fontSize16,
-                  color: secondaryTextColor,
-                  fontWeight: fontWeightRegular,
                 ),
               ),
             ],
@@ -158,13 +118,12 @@ class _SearchScreenState extends State<SearchScreen> {
               leading: ClipRRect(
                 borderRadius: BorderRadius.circular(8),
                 child: SizedBox(
-                  height: 40,
-                  width: 40,
-                  child: ImageUtils().getBase64Image(
-                    product.imageUrl,
-                    fit: BoxFit.cover,
-                  ),
-                ),
+                    height: 40,
+                    width: 40,
+                    child: ImageUtils(
+                      base64String: product.imageUrl,
+                      fit: BoxFit.cover,
+                    )),
               ),
               title: Text(
                 product.name ?? "",
@@ -175,7 +134,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 ),
               ),
               subtitle: Text(
-                " ₹${product.price}",
+                "${product.price}",
                 style: const TextStyle(
                   fontSize: fontSize12,
                   color: secondaryTextColor,

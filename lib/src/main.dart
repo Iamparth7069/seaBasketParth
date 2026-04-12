@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:seabasket/src/base/utils/constants/navigation_route_constants.dart';
 import 'package:seabasket/src/base/utils/localization/localization.dart';
@@ -22,8 +23,7 @@ import 'base/utils/navigation_utils.dart';
 
 void mainDelegate() async {
   WidgetsFlutterBinding.ensureInitialized();
-  Stripe.publishableKey =
-      'pk_test_51TCxjePFAVGhlGbEM8Egihh6hfupnUH4PPtlCLpVJuSpEikYgeTl6gnSQLcTBLUMQ659HkV2O5NuGJEzzgXOA2Fg00lppHhb7N';
+  Stripe.publishableKey = dotenv.env['STRIPE_PUBLISHABLE_KEY']!;
   setupLocator();
   await init();
   await initializeDateFormatting();

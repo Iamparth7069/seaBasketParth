@@ -2,17 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:seabasket/src/base/dependencyinjection/locator.dart';
 import 'package:seabasket/src/base/extensions/context_extension.dart';
 import 'package:seabasket/src/base/extensions/scaffold_extension.dart';
+import 'package:seabasket/src/base/extensions/string_extension.dart';
 import 'package:seabasket/src/base/utils/constants/color_constant.dart';
 import 'package:seabasket/src/base/utils/constants/fontsize_constant.dart';
 import 'package:seabasket/src/base/utils/constants/navigation_route_constants.dart';
 import 'package:seabasket/src/base/utils/dialog_utils.dart';
 import 'package:seabasket/src/base/utils/localization/localization.dart';
 import 'package:seabasket/src/base/utils/navigation_utils.dart';
-import 'package:seabasket/src/base/utils/progress_dialog_utils.dart';
 import 'package:seabasket/src/controllers/auth/auth_controller.dart';
+import 'package:seabasket/src/models/request/req_reset_password_model.dart';
 import 'package:seabasket/src/widgets/primary_button.dart';
 import 'package:seabasket/src/widgets/primary_text_field.dart';
-import '../../base/utils/progress_dialog_utils.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
   const ResetPasswordScreen({Key? key}) : super(key: key);
@@ -39,15 +39,14 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
   Future<void> _handleResetPassword() async {
     if (!_formKey.currentState!.validate()) return;
-    // if (ProgressDialogUtils.isLoading) return;
     final password = _passwordController.text;
     final confirmPassword = _confirmPasswordController.text;
     if (password != confirmPassword) {
       showAlertDialog(message: Localization.of().msgPasswordNotMatch);
       return;
     }
-    final success =
-        await locator<AuthController>().resetPassword(context, password);
+    final success = await locator<AuthController>()
+        .resetPassword(context, ReqResetPasswordModel(password: password));
     if (success && mounted) {
       _showSuccessDialog();
     }
@@ -127,6 +126,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         _passwordFocus.unfocus();
         _confirmPasswordFocus.requestFocus();
       },
+      validateFunction: (value) => value?.isValidPassword(),
     );
   }
 
@@ -143,6 +143,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       onFieldSubmitted: (value) {
         _confirmPasswordFocus.unfocus();
       },
+      validateFunction: (value) =>
+          value?.isValidConfirmPassword(_passwordController.text),
     );
   }
 

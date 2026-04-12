@@ -9,8 +9,8 @@ import 'package:seabasket/src/base/utils/constants/fontsize_constant.dart';
 import 'package:seabasket/src/base/utils/constants/navigation_route_constants.dart';
 import 'package:seabasket/src/base/utils/localization/localization.dart';
 import 'package:seabasket/src/base/utils/navigation_utils.dart';
-import 'package:seabasket/src/base/utils/progress_dialog_utils.dart';
 import 'package:seabasket/src/controllers/auth/auth_controller.dart';
+import 'package:seabasket/src/models/request/req_login_model.dart';
 import 'package:seabasket/src/widgets/primary_button.dart';
 
 import 'package:seabasket/src/widgets/primary_text_field.dart';
@@ -38,8 +38,8 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!_formKey.currentState!.validate()) return;
     final enteredEmail = _emailController.text.trim();
     final enteredPassword = _passwordController.text.trim();
-    final success = await locator<AuthController>()
-        .login(context, enteredEmail, enteredPassword);
+    final success = await locator<AuthController>().login(context,
+        ReqLoginModel(username: enteredEmail, password: enteredPassword));
     if (success != null) {
       locator<NavigationUtils>().push(routeOtpVerify,
           arguments: {paramEmail: enteredEmail, paramIsLogin: true});
@@ -51,7 +51,7 @@ class _LoginScreenState extends State<LoginScreen> {
     super.initState();
     _tapGestureRecognizer = TapGestureRecognizer()
       ..onTap = () {
-        locator<NavigationUtils>().pushReplacement(routeRegister);
+        locator<NavigationUtils>().push(routeRegister);
       };
     _resetPasswordRecognizer = TapGestureRecognizer()
       ..onTap = () {
@@ -114,27 +114,13 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         children: [
                           const TextSpan(text: " "),
-                          WidgetSpan(
-                            alignment: PlaceholderAlignment.middle,
-                            child: InkWell(
-                              borderRadius: BorderRadius.circular(4),
-                              splashColor: Colors.grey.withAlpha(10),
-                              onTap: () {
-                                locator<NavigationUtils>()
-                                    .push(routeForgotPassword);
-                              },
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 2, vertical: 2),
-                                child: Text(
-                                  Localization.of().resetPassword,
-                                  style: const TextStyle(
-                                    color: primaryTextColor,
-                                    fontWeight: fontWeightSemiBold,
-                                    decoration: TextDecoration.underline,
-                                  ),
-                                ),
-                              ),
+                          TextSpan(
+                            recognizer: _resetPasswordRecognizer,
+                            text: Localization.of().resetPassword,
+                            style: const TextStyle(
+                              color: primaryTextColor,
+                              fontWeight: fontWeightSemiBold,
+                              decoration: TextDecoration.underline,
                             ),
                           ),
                         ],
@@ -142,7 +128,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 24),
                     _getLoginButton(),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 24),
                     _getSkipButton(),
                   ],
                 ),
@@ -160,23 +146,14 @@ class _LoginScreenState extends State<LoginScreen> {
                 fontSize: fontSize14,
               ),
               children: [
-                TextSpan(text: " "),
-                WidgetSpan(
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(4),
-                    splashColor: Colors.grey.withAlpha(10),
-                    onTap: () {
-                      locator<NavigationUtils>().pushReplacement(routeRegister);
-                    },
-                    child: Text(
-                      Localization.of().joinAccount,
-                      style: const TextStyle(
-                        color: primaryTextColor,
-                        fontWeight: fontWeightSemiBold,
-                        decoration: TextDecoration.underline,
-                      ),
-                    ),
+                TextSpan(
+                  text: Localization.of().joinAccount,
+                  style: const TextStyle(
+                    color: primaryTextColor,
+                    fontWeight: fontWeightSemiBold,
+                    decoration: TextDecoration.underline,
                   ),
+                  recognizer: _tapGestureRecognizer,
                 ),
               ],
             ),
@@ -236,13 +213,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Widget _getSkipButton() {
     return TextButton(
-      style: TextButton.styleFrom(
-        splashFactory: NoSplash.splashFactory,
-        overlayColor: Colors.transparent,
-        padding: EdgeInsets.zero,
-        minimumSize: Size.zero,
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      ),
       onPressed: () {
         locator<NavigationUtils>().pushAndRemoveUntil(routeBase);
       },

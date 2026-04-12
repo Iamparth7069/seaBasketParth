@@ -30,8 +30,8 @@ class ProductApiManager {
         if (sort != null) "sort": sort,
       },
     );
-    if (response == null) return null;
-    final list = response.data as List;
+
+    final list = response!.data as List;
     return list
         .map(
           (product) => ProductModel.fromJson(product),
@@ -43,8 +43,7 @@ class ProductApiManager {
     final response = await locator<ApiService>().get(
       '$apiGetProduct/$productId',
     );
-    if (response == null) return null;
 
-    return ResProductDetailModel.fromJson(response.data);
+    return ResProductDetailModel.fromJson(response!.data);
   }
 }

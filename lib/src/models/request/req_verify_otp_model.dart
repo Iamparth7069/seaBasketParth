@@ -4,9 +4,10 @@ part 'req_verify_otp_model.g.dart';
 
 @JsonSerializable()
 class ReqVerifyOtpModel {
-  final String OTP;
+  @JsonKey(name: "OTP")
+  final String otp;
 
-  ReqVerifyOtpModel({required this.OTP});
+  ReqVerifyOtpModel({required this.otp});
 
   factory ReqVerifyOtpModel.fromJson(Map<String, dynamic> json) =>
       _$ReqVerifyOtpModelFromJson(json);

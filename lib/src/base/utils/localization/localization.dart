@@ -91,7 +91,6 @@ abstract class Localization {
   String get msgNotAccount;
   String get joinAccount;
   String get loginText;
-  String get loginTextSpanText;
   String get registerMessage;
   String get registerTermMessage;
   String get cookieUse;
@@ -118,8 +117,6 @@ abstract class Localization {
   String get otpMessage;
   String get newOtpText;
   String get skipText;
-  String get registerSuccessful;
-  String get otpRequiredMessage;
 
   // base screen
   String get homeText;

@@ -98,14 +98,9 @@ class _AccountScreenState extends State<AccountScreen> {
         okButtonTitle: Localization.of().yes,
         okButtonAction: () {
           locator<NavigationUtils>().pop();
-          // context.read<OrderProvider>().clearOrders();
           locator<AuthController>().logout(context);
-          locator<NavigationUtils>().pushAndRemoveUntil(routeLogin)?.then((_) {
-            locator<NavigationUtils>()
-                .getCurrentContext
-                .read<BottomNavProvider>()
-                .changeTab(0);
-          });
+          context.read<BottomNavProvider>().changeTab(0);
+          locator<NavigationUtils>().pushAndRemoveUntil(routeLogin);
         },
         isCancelEnable: true);
   }

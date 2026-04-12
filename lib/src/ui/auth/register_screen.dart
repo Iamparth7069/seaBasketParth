@@ -9,7 +9,7 @@ import 'package:seabasket/src/base/utils/constants/navigation_route_constants.da
 import 'package:seabasket/src/base/utils/localization/localization.dart';
 import 'package:seabasket/src/base/utils/navigation_utils.dart';
 import 'package:seabasket/src/controllers/auth/auth_controller.dart';
-import 'package:seabasket/src/models/user.dart';
+import 'package:seabasket/src/models/request/req_user_model.dart';
 import 'package:seabasket/src/widgets/primary_button.dart';
 import 'package:seabasket/src/widgets/primary_text_field.dart';
 import '../../base/extensions/scaffold_extension.dart';
@@ -39,20 +39,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final enteredUserName = _userNameController.text.trim();
     final enteredPhoneNumber = _phoneController.text.trim();
 
-    final user = User(
+    final success = await locator<AuthController>().register(
+      context,
+      ReqUserModel(
         username: enteredUserName,
         email: enteredEmail,
+        phoneNumber: enteredPhoneNumber,
         hashedPassword: enteredPassword,
-        phoneNumber: enteredPhoneNumber);
-
-    final success = await locator<AuthController>().register(context, user);
+      ),
+    );
     if (success != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(Localization.of().registerSuccessful),
-          duration: const Duration(seconds: 2),
-        ),
-      );
       locator<NavigationUtils>().pushReplacement(routeLogin);
     }
   }
@@ -62,7 +58,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.initState();
     _tapGestureRecognizer = TapGestureRecognizer()
       ..onTap = () {
-        locator<NavigationUtils>().pushReplacement(routeLogin);
+        locator<NavigationUtils>().push(routeLogin);
       };
   }
 
@@ -172,21 +168,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 children: [
                   const TextSpan(text: " "),
-                  WidgetSpan(
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(4),
-                      splashColor: Colors.grey.withAlpha(10),
-                      onTap: () {
-                        locator<NavigationUtils>().pushReplacement(routeLogin);
-                      },
-                      child: Text(
-                        Localization.of().loginTextSpanText,
-                        style: const TextStyle(
-                          color: primaryTextColor,
-                          fontWeight: fontWeightSemiBold,
-                          decoration: TextDecoration.underline,
-                        ),
-                      ),
+                  TextSpan(
+                    text: Localization.of().loginText,
+                    recognizer: _tapGestureRecognizer,
+                    style: const TextStyle(
+                      color: primaryTextColor,
+                      fontWeight: fontWeightSemiBold,
+                      decoration: TextDecoration.underline,
                     ),
                   ),
                 ],

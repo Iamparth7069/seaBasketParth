@@ -10,23 +10,13 @@ class CartApiManager {
   Future<ResCartModel?> addToCart(ReqCartModel item) async {
     final response =
         await locator<ApiService>().post(apiAddCart, data: item.toJson());
-
-    if (response != null) {
-      return ResCartModel.fromJson(response.data);
-    }
-    return null;
+    return ResCartModel.fromJson(response!.data);
   }
 
   Future<ResUpdateCartModel?> updateCartApiCall(
       ReqUpdateCartModel? item) async {
-    final response = await locator<ApiService>().patch(apiUpdateCart,
-        params: item != null
-            ? {"cart_item_id": item.cartItemId, "value": item.value}
-            : {});
-
-    if (response != null) {
-      return ResUpdateCartModel.fromJson(response.data);
-    }
-    return null;
+    final response = await locator<ApiService>()
+        .patch(apiUpdateCart, params: item?.toJson());
+    return ResUpdateCartModel.fromJson(response!.data);
   }
 }

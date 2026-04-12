@@ -30,7 +30,6 @@ class PrimaryTextField extends StatefulWidget {
   final bool autoFocus;
   final Icon? prefixIcon;
   final Icon? suffixIcon;
-  final bool hideErrorText;
 
   const PrimaryTextField({
     Key? key,
@@ -59,7 +58,6 @@ class PrimaryTextField extends StatefulWidget {
     this.suffixIcon,
     this.onTapped,
     this.readOnly = false,
-    this.hideErrorText = false,
   }) : super(key: key);
 
   @override
@@ -135,14 +133,13 @@ class PrimaryTextFieldState extends State<PrimaryTextField> {
             hintStyle: TextStyle(
                 color: secondaryTextColor.withAlpha(100), fontSize: fontSize14),
             counter: const Offstage(),
-            contentPadding: widget.contentPadding ?? EdgeInsets.zero,
+            contentPadding:
+                widget.contentPadding ?? const EdgeInsets.only(left: 5),
             floatingLabelBehavior: FloatingLabelBehavior.auto,
-            errorStyle: widget.hideErrorText
-                ? const TextStyle(height: 0, fontSize: 0)
-                : const TextStyle(
-                    color: Colors.red,
-                    fontSize: fontSize14,
-                  ),
+            errorStyle: const TextStyle(
+              color: Colors.red,
+              fontSize: fontSize14,
+            ),
             errorMaxLines: 3,
             labelStyle:
                 const TextStyle(fontSize: fontSize14, color: Colors.grey),

@@ -30,10 +30,8 @@ class ApiService {
       ..interceptors.add(
         InterceptorsWrapper(
           onRequest: (options, handler) {
-            options.headers.addAll({
-              // Key  acsessToken
-              'Authorization': 'Bearer ${getString(prefkeyToken)}'
-            });
+            options.headers
+                .addAll({'Authorization': 'Bearer ${getString(prefkeyToken)}'});
             if (kDebugMode) {
               log(options.headers.toString(), name: "Headers");
               log(options.baseUrl.toString() + options.path, name: "BaseURL");

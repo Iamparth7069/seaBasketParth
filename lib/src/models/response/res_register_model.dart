@@ -13,12 +13,8 @@ class ResRegisterModel {
     this.message,
   });
 
-  factory ResRegisterModel.fromJson(Map<String, dynamic> json) {
-    return ResRegisterModel(
-      data: json['data'] != null ? User.fromJson(json['data']) : null,
-      message: json['message'],
-    );
-  }
+  factory ResRegisterModel.fromJson(Map<String, dynamic> json) =>
+      _$ResRegisterModelFromJson(json);
 
   Map<String, dynamic> toJson() => _$ResRegisterModelToJson(this);
 }

@@ -99,7 +99,9 @@ class NavigationUtils {
       case routeOrderDetail:
         return MaterialPageRoute(
           settings: settings,
-          builder: (_) => const OrderDetailScreen(),
+          builder: (_) => OrderDetailScreen(
+            orderId: args?[paramOrderId],
+          ),
         );
       case routeOrderHistory:
         return MaterialPageRoute(

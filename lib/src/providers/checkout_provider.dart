@@ -24,11 +24,4 @@ class CheckoutProvider extends ChangeNotifier {
     _isEditing = !_isEditing;
     notifyListeners();
   }
-
-  /// Call this when entering the checkout screen to ensure the button
-  /// always starts showing "Change" (not "Save") on fresh entry.
-  void resetEditing() {
-    _isEditing = false;
-    notifyListeners();
-  }
 }

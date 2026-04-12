@@ -59,10 +59,6 @@ class LocalizationEN implements Localization {
 
   @override
   String get loginText => "Login";
-
-  @override
-  String get loginTextSpanText => "Log In";
-
   @override
   String get createAccountText => "Create an Account";
 
@@ -117,7 +113,8 @@ class LocalizationEN implements Localization {
 
   @override
   String get msgPasswordError =>
-      "Password must contain at least 8 characters, including uppercase, lowercase, number, and a special character";
+      "Password should be at least 8 characters long and have atleast one uppercase, one alphanumeric and one number.";
+
   @override
   String get loginSubtitle => "It's great to see you again.";
 
@@ -192,13 +189,10 @@ class LocalizationEN implements Localization {
       "You can now use your new password to login to your account.";
 
   @override
-  String get invalidOtp => "Enter Full 4 digit OTP";
+  String get invalidOtp => "Invalid OTP";
 
   @override
   String get otpMessage => "Your 4 digit OTP:";
-
-  @override
-  String get otpRequiredMessage => "OTP is Required";
 
   @override
   String get newOtpText => "New OTP:";
@@ -260,7 +254,7 @@ class LocalizationEN implements Localization {
 
   @override
   String get noResultFoundSubText =>
-      "  Try a similar word or something \n more general.";
+      "  Try a similar word or something more general.";
 
   // product detail screen text
   @override
@@ -363,9 +357,6 @@ class LocalizationEN implements Localization {
 
   @override
   String get msgUpdateProfileFailed => "Profile not updated!";
-
-  @override
-  String get registerSuccessful => "Register successful";
 
   // checkout
   @override
